@@ -42,26 +42,26 @@ h1 {
 </style>
 </head>
 <body>
-<h1>CTS Bus Times v4</h1>
+<h1>CTS Bus Times v5</h1>
 
 <div class="stop" id="stop1">
-    <h2>NW Kings Blvd & NW Taylor Ave (Route 5 → Downtown)</h2>
+    <h2>NW Kings Blvd & NW Taylor Ave (Route 5 → OSU/Downtown)</h2>
     <p class="arrival">Loading...</p>
     <p class="arrival">Loading...</p>
 </div>
 
 <div class="stop" id="stop2">
-    <h2>NW Kings Blvd & NW Monroe Ave (Route 5 → Downtown)</h2>
+    <h2>NW Kings Blvd & NW Monroe Ave (Route 5 → Timberhill)</h2>
+    <p class="arrival">Loading...</p>
     <p class="arrival">Loading...</p>
 </div>
 
 <script>
-// Replace these URLs with your CTS stop page URLs
+// CTS "Text View" URLs with CORS proxy
 const stopUrls = [
-    'https://www.corvallistransit.com/rtt/public/?page=text&pln=14484',
-    'https://www.corvallistransit.com/rtt/public/?page=text&pln=14599'
+    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14484',
+    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14599'
 ];
-const proxy = 'https://thingproxy.freeboard.io/fetch/'; // free CORS proxy
 
 function getColor(mins) {
     if (mins < 5) return 'green';
@@ -72,11 +72,10 @@ function getColor(mins) {
 async function fetchBusTimes() {
     for (let i = 0; i < stopUrls.length; i++) {
         try {
-            const response = await fetch(proxy + encodeURIComponent(stopUrls[i]));
-            const data = await response.json();
-            const html = data.contents;
+            const response = await fetch(stopUrls[i]);
+            const html = await response.text();
 
-            // Use regex to find all <li>In XX min</li>
+            // Match all <li>In XX min</li>
             const matches = [...html.matchAll(/<li>In (\d+) min<\/li>/g)];
             const arrivals = matches.map(m => parseInt(m[1], 10));
 
