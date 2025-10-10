@@ -57,11 +57,13 @@ const stops = [
     { url: 'https://www.corvallistransit.com/rtt/public/?page=text&pln=14599', elementId: 'stop2' } // replace
 ];
 
+const proxy = "https://api.allorigins.win/get?url=";
+
 async function fetchBusTime(stop) {
     try {
-        const response = await fetch(stop.url);
-        const text = await response.text();
-        // Parse "In XX min" from the page
+        const response = await fetch(proxy + encodeURIComponent(stop.url));
+        const data = await response.json();
+        const text = data.contents;
         const match = text.match(/In (\d+) min/);
         const display = match ? `${match[1]} min` : "No info";
         document.querySelector(`#${stop.elementId} p`).innerText = display;
