@@ -29,61 +29,84 @@ h1 {
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 .stop h2 {
-    margin: 0;
+    margin: 0 0 10px 0;
     font-size: 1.2rem;
 }
-.stop p {
-    margin: 5px 0 0 0;
+.arrival {
     font-size: 1.5rem;
     font-weight: bold;
 }
+.arrival.green { color: green; }
+.arrival.yellow { color: orange; }
+.arrival.red { color: red; }
 </style>
 </head>
 <body>
-<h1>CTS Bus Times v2</h1>
+<h1>CTS Bus Times v3</h1>
+
 <div class="stop" id="stop1">
-    <h2>Kings & Monroe (Route 5, NB)</h2>
-    <p>Loading...</p>
+    <h2>NW Kings Blvd & NW Taylor Ave (Route 5 → Downtown)</h2>
+    <p class="arrival">Loading...</p>
+    <p class="arrival">Loading...</p>
 </div>
+
 <div class="stop" id="stop2">
-    <h2>Kings & Taylor (Route 5, SB)</h2>
-    <p>Loading...</p>
+    <h2>NW Kings Blvd & NW Monroe Ave (Route 5 → Downtown)</h2>
+    <p class="arrival">Loading...</p>
 </div>
 
 <script>
-// Replace these URLs with your actual CTS stop URLs from QR codes
-const stops = [
-    { url: 'https://www.corvallistransit.com/rtt/public/?page=text&pln=14484', elementId: 'stop1' },
-    { url: 'https://www.corvallistransit.com/rtt/public/?page=text&pln=14599', elementId: 'stop2' } // replace
+// Replace these URLs with your CTS stop page URLs
+const stopUrls = [
+    'https://www.corvallistransit.com/rtt/public/?page=text&pln=14484',
+    'https://www.corvallistransit.com/rtt/public/?page=text&pln=14599'
 ];
+const proxy = 'https://api.allorigins.win/get?url='; // free CORS proxy
 
-const proxy = "https://api.allorigins.win/get?url=";
+function getColor(mins) {
+    if (mins < 5) return 'green';
+    if (mins <= 15) return 'yellow';
+    return 'red';
+}
 
-async function fetchBusTime(stop) {
-    try {
-        const response = await fetch(proxy + encodeURIComponent(stop.url));
-        const data = await response.json();
-        const text = data.contents;
-        const match = text.match(/In (\d+) min/);
-        const display = match ? `${match[1]} min` : "No info";
-        document.querySelector(`#${stop.elementId} p`).innerText = display;
-    } catch (e) {
-        document.querySelector(`#${stop.elementId} p`).innerText = "Error";
-        console.error(e);
+async function fetchBusTimes() {
+    for (let i = 0; i < stopUrls.length; i++) {
+        try {
+            const response = await fetch(proxy + encodeURIComponent(stopUrls[i]));
+            const data = await response.json();
+            const html = data.contents;
+
+            // Use regex to find all <li>In XX min</li>
+            const matches = [...html.matchAll(/<li>In (\d+) min<\/li>/g)];
+            const arrivals = matches.map(m => parseInt(m[1], 10));
+
+            const arrivalElems = document.querySelectorAll(`#stop${i+1} .arrival`);
+            arrivalElems.forEach((el, j) => {
+                if (arrivals[j] !== undefined) {
+                    el.innerText = `${arrivals[j]} min`;
+                    el.className = 'arrival ' + getColor(arrivals[j]);
+                } else {
+                    el.innerText = '-';
+                    el.className = 'arrival';
+                }
+            });
+
+        } catch (e) {
+            console.error(e);
+            const arrivalElems = document.querySelectorAll(`#stop${i+1} .arrival`);
+            arrivalElems.forEach(el => {
+                el.innerText = 'Error';
+                el.className = 'arrival';
+            });
+        }
     }
 }
 
-async function updateAllStops() {
-    for (const stop of stops) {
-        await fetchBusTime(stop);
-    }
-}
-
-// Initial load
-updateAllStops();
+// Initial fetch
+fetchBusTimes();
 
 // Refresh every 30 seconds
-setInterval(updateAllStops, 30000);
+setInterval(fetchBusTimes, 30000);
 </script>
 </body>
 </html>
