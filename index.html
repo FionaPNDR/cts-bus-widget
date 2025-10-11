@@ -163,24 +163,28 @@ h1
 const params = new URLSearchParams(window.location.search);
 const mode = params.get('mode') || 'fiona'; // defaults to fiona
 
-if (mode === 'fiona') {
+if (mode === 'fiona') 
+{
     document.title = "Fiona's CTS Times";
     document.querySelector('h1').innerText = "Fiona's CTS Bus Times";
-} else if (mode === 'alice') {
+} 
+else if (mode === 'alice') 
+{
     document.title = "Alice's CTS Times";
     document.querySelector('h1').innerText = "Alice's CTS Bus Times";
 }
 
-const modeStops = {
+const modeStops = 
+{
     fiona: [1, 2],
     alice: [3, 4, 5, 6, 7, 8, 9]
 };
 
 // Hide stops that are not part of this mode
-document.querySelectorAll('.stop').forEach((el, index) => {
-    if (!modeStops[mode].includes(index + 1)) {
+document.querySelectorAll('.stop').forEach((el, index) => 
+{
+    if (!modeStops[mode].includes(index + 1)) 
         el.style.display = 'none';
-    }
 });
 
 const stopUrls = [
@@ -202,12 +206,14 @@ function getColor(mins, rthresh, ythresh)
     return 'green';
 }
 
-function setModeFromURL() {
+function setModeFromURL() 
+{
     const params = new URLSearchParams(window.location.search);
     let mode = params.get('mode');
 
-    // Default to Fiona if no mode specified
-    if (!mode) {
+    // default to fiona if no mode specified
+    if (!mode) 
+    {
         mode = 'fiona';
         params.set('mode', mode);
         window.history.replaceState({}, '', `${location.pathname}?${params}`);
@@ -217,13 +223,15 @@ function setModeFromURL() {
     return mode;
 }
 
-function updateTitle(mode) {
+function updateTitle(mode) 
+{
     const titleEl = document.getElementById('pageTitle');
     const name = (mode === 'fiona') ? "Fiona" : "Alice";
     titleEl.innerText = `${name}'s CTS Bus Times`;
 
     // clicking the title switches mode
-    titleEl.onclick = () => {
+    titleEl.onclick = () => 
+    {
         const newMode = (mode === 'fiona') ? 'alice' : 'fiona';
         const params = new URLSearchParams(window.location.search);
         params.set('mode', newMode);
@@ -241,7 +249,6 @@ async function fetchBusTimes()
             const response = await fetch(stopUrls[i]);
             const html = await response.text();
 
-            // Match all <li>In XX min</li>
             const matches = [...html.matchAll(/<li>In (\d+) min<\/li>/g)];
             const arrivals = matches.map(m => parseInt(m[1], 10));
 
@@ -251,12 +258,12 @@ async function fetchBusTimes()
                 if (arrivals.length > 0 && arrivals[j] !== undefined) 
                 {
                     el.innerText = `in ${arrivals[j]} minutes`; 
-                    let rthresh = 5, ythresh = 15; // red if <= 5 mins, yellow if <= 15 mins
-                    if (i == 2)
+                    let rthresh = 5, ythresh = 15; // witham hill & woodland, 9th & fremont
+                    if (i == 2) // 29th & grant
                         rthresh = 25, ythresh = 40;
-                    if (i == 3 || i == 5 || i == 7)
+                    if (i == 3 || i == 5 || i == 7) // circle & four acre, monroe & 9th, 9th & madison
                         rthresh = 10, ythresh = 20;
-                    if (i == 8)
+                    if (i == 8) // 9th & circle
                         rthresh = 15, ythresh = 25;
                     el.className = 'arrival ' + getColor(arrivals[j], rthresh, ythresh);
                     el.style.display = 'block'; 
@@ -284,10 +291,10 @@ async function fetchBusTimes()
     }
 }
 
-// Initial bus time fetch
+// initial bus time fetch
 fetchBusTimes();
 
-// Refresh every 30 seconds
+// refresh every 15 seconds
 setInterval(fetchBusTimes, 15000);
 </script>
 
