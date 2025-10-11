@@ -155,7 +155,7 @@ async function fetchBusTimes()
             console.error(e);
             const arrivalElems = document.querySelectorAll(`#stop${i+1} .arrival`);
             arrivalElems.forEach(el => {
-                el.innerText = 'Error: Could not fetch times from CTS website';
+                el.innerText = 'Error: No bus time found';
                 el.className = 'arrival';
             });
         }
