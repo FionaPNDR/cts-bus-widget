@@ -16,11 +16,10 @@ body
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: #ffffff;
     margin: 0;
-    padding: 10px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100vh;
 }
 
 h1 
@@ -33,21 +32,17 @@ h1
 {
     width: 90%;
     background-color: #ffe3ed;
-    padding: 10px;
-    margin: 5px 0;
+    padding: 15px;
+    margin: 12px 0;
     border-radius: 12px;
     text-align: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
 }
 
 .stop h2 
 {
-    margin-bottom: 5px;
-    font-size: 3vh;
+    margin: 0 0 10px 0;
+    font-size: 1.2rem;
 }
 
 .stop h2 a
@@ -59,9 +54,8 @@ h1
 
 .arrival 
 {
-    font-size: 4vh;
+    font-size: 1.4rem;
     font-weight: bold;
-    margin: 2px 0;
 }
 
 .arrival.green { color: #008000; }
@@ -114,25 +108,13 @@ h1
     <p class="arrival">Loading...</p>
 </div>
 
-<div class="stop" id="stop5" style="background-color: #fff6d8;">
-    <h2>
-        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=14271" target="_blank">
-            test 5th box for sizing
-        </a>
-    </h2>
-    <p class="arrival">Loading...</p>
-    <p class="arrival">Loading...</p>
-</div>
-
 <script>
 
 const stopUrls = [
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14484',
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14599',
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=12567',
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=11043',
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14271'
-
+    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=11043'
 ];
 
 function getColor(mins, rthresh, ythresh) 
