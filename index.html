@@ -88,7 +88,7 @@ h1
     <p class="arrival">Loading...</p>
 </div>
 
-<div class="stop" id="stop3" style="background-color: #ffc6c6;">
+<div class="stop" id="stop3" style="background-color: #ffd4d4;">
     <h2>
         <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=12567" target="_blank">
             29th & Grant (7 → Home Depot)
@@ -98,7 +98,7 @@ h1
     <p class="arrival">Loading...</p>
 </div>
 
-<div class="stop" id="stop4" style="background-color: #ffc6c6;">
+<div class="stop" id="stop4" style="background-color: #ffd4d4;">
     <h2>
         <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=11043" target="_blank">
             Circle & Four Acre (7 → Witham Hill)
@@ -108,17 +108,7 @@ h1
     <p class="arrival">Loading...</p>
 </div>
 
-<div class="stop" id="stop5" style="background-color: #d2f2ff;">
-    <h2>
-        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=12477" target="_blank">
-            Monroe & 9th (1 → Witham Hill)
-        </a>
-    </h2>
-    <p class="arrival">Loading...</p>
-    <p class="arrival">Loading...</p>
-</div>
-
-<div class="stop" id="stop6" style="background-color: #d2f2ff;">
+<div class="stop" id="stop5" style="background-color: #d4eeff;">
     <h2>
         <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=14704" target="_blank">
             Witham Hill & Woodland (1 → LBCC)
@@ -128,7 +118,17 @@ h1
     <p class="arrival">Loading...</p>
 </div>
 
-<div class="stop" id="stop7" style="background-color: #f6d8ff;">
+<div class="stop" id="stop6" style="background-color: #d4eeff;">
+    <h2>
+        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=12477" target="_blank">
+            Monroe & 9th (1 → Witham Hill)
+        </a>
+    </h2>
+    <p class="arrival">Loading...</p>
+    <p class="arrival">Loading...</p>
+</div>
+
+<div class="stop" id="stop7" style="background-color: #f2dcff;">
     <h2>
         <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=10752" target="_blank">
             9th & Fremont (2 → Home Depot)
@@ -138,7 +138,7 @@ h1
     <p class="arrival">Loading...</p>
 </div>
 
-<div class="stop" id="stop8" style="background-color: #f6d8ff;">
+<div class="stop" id="stop8" style="background-color: #f2dcff;">
     <h2>
         <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=10723" target="_blank">
             9th & Madison (2 → Home Depot)
@@ -148,7 +148,7 @@ h1
     <p class="arrival">Loading...</p>
 </div>
 
-<div class="stop" id="stop9" style="background-color: #f6d8ff;">
+<div class="stop" id="stop9" style="background-color: #f2dcff;">
     <h2>
         <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=10396" target="_blank">
             9th & Circle (2 → Route 1 Bus Stop)
@@ -188,8 +188,8 @@ const stopUrls = [
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14599',
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=12567',
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=11043',
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=12477',
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14704',
+    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=12477',
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=10752',
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=10723',
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=10396'
@@ -205,7 +205,8 @@ function getColor(mins, rthresh, ythresh)
 async function fetchBusTimes() 
 {
     for (let i = 0; i < stopUrls.length; i++) {
-        try {
+        try 
+        {
             const response = await fetch(stopUrls[i]);
             const html = await response.text();
 
@@ -214,22 +215,34 @@ async function fetchBusTimes()
             const arrivals = matches.map(m => parseInt(m[1], 10));
 
             const arrivalElems = document.querySelectorAll(`#stop${i+1} .arrival`);
-            arrivalElems.forEach((el, j) => {
-                if (arrivals[j] !== undefined) {
+            arrivalElems.forEach((el, j) => 
+            {
+                if (arrivals.length > 0 && arrivals[j] !== undefined) 
+                {
                     el.innerText = `in ${arrivals[j]} minutes`; 
                     let rthresh = 5, ythresh = 15; // red if <= 5 mins, yellow if <= 15 mins
                     if (i == 2)
                         rthresh = 25, ythresh = 40;
-                    if (i == 3)
+                    if (i == 3 || i == 5 || i == 7)
                         rthresh = 10, ythresh = 20;
+                    if (i == 8)
+                        rthresh = 15, ythresh = 25;
                     el.className = 'arrival ' + getColor(arrivals[j], rthresh, ythresh);
                     el.style.display = 'block'; 
-                } else {
+                } 
+                else if (j == 0)
+                {
+                    el.innerText = "No arrivals in the next 60 min";
+                    el.className = 'arrival';
+                    el.style.display = 'block';
+                }
+                else {
                     el.style.display = 'none'; 
                 }
             });
 
-        } catch (e) {
+        } catch (e) 
+        {
             console.error(e);
             const arrivalElems = document.querySelectorAll(`#stop${i+1} .arrival`);
             arrivalElems.forEach(el => {
