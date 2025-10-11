@@ -8,7 +8,7 @@
 <style>
 body {
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #e4e4e4;
+    background-color: #ffffff;
     margin: 0;
     padding: 20px;
     display: flex;
@@ -21,7 +21,7 @@ h1 {
 }
 .stop {
     width: 90%;
-    background-color: #ffffff;
+    background-color: #ffc9db;
     padding: 15px;
     margin: 10px 0;
     border-radius: 12px;
@@ -37,21 +37,33 @@ h1 {
     font-weight: bold;
 }
 .arrival.green { color: green; }
-.arrival.yellow { color: orange; }
+.arrival.yellow { color: rgb(255, 153, 0); }
 .arrival.red { color: red; }
 </style>
 </head>
 <body>
-<h1>Fiona's CTS Bus Times</h1>
+<h1>Fiona & Alice's CTS Bus Times</h1>
 
 <div class="stop" id="stop1">
-    <h2>NW Kings Blvd & NW Taylor Ave (Route 5 → OSU/Downtown)</h2>
+    <h2>Kings & Taylor (Route 5 → OSU)</h2>
     <p class="arrival">Loading...</p>
     <p class="arrival">Loading...</p>
 </div>
 
 <div class="stop" id="stop2">
-    <h2>NW Kings Blvd & NW Monroe Ave (Route 5 → Timberhill)</h2>
+    <h2>Kings & Monroe (Route 5 → Fred Meyer)</h2>
+    <p class="arrival">Loading...</p>
+    <p class="arrival">Loading...</p>
+</div>
+
+<div class="stop" id="stop3" style="background-color: #fff3cc;">
+    <h2>29th & Grant (Route 7 → Home Depot)</h2>
+    <p class="arrival">Loading...</p>
+    <p class="arrival">Loading...</p>
+</div>
+
+<div class="stop" id="stop4" style="background-color: #fff3cc;">
+    <h2>Circle & Four Acre (Route 7 → Witham Hill)</h2>
     <p class="arrival">Loading...</p>
     <p class="arrival">Loading...</p>
 </div>
@@ -60,14 +72,23 @@ h1 {
 // CTS "Text View" URLs with CORS proxy
 const stopUrls = [
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14484',
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14599'
+    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14599',
+    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=12567',
+    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=11043'
 ];
 
-function getColor(mins) {
-    if (mins < 5) return 'green';
+function getColor_fiona(mins) {
+    if (mins <= 5) return 'red';
     if (mins <= 15) return 'yellow';
-    return 'red';
+    return 'green';
 }
+
+function getColor_alice(mins) {
+    if (mins <= 25) return 'red';
+    if (mins <= 40) return 'yellow';
+    return 'green';
+}
+
 
 async function fetchBusTimes() {
     for (let i = 0; i < stopUrls.length; i++) {
@@ -82,8 +103,11 @@ async function fetchBusTimes() {
             const arrivalElems = document.querySelectorAll(`#stop${i+1} .arrival`);
             arrivalElems.forEach((el, j) => {
                 if (arrivals[j] !== undefined) {
-                    el.innerText = `in ${arrivals[j]} min`;
-                    el.className = 'arrival ' + getColor(arrivals[j]);
+                    el.innerText = `in ${arrivals[j]} minutes`;
+                    if(i < 2)
+                        el.className = 'arrival ' + getColor_fiona(arrivals[j]);
+                    else
+                        el.className = 'arrival ' + getColor_alice(arrivals[j]);
                     el.style.display = 'block'; 
                 } else {
                     el.style.display = 'none'; 
