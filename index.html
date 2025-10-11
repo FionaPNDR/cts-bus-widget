@@ -66,7 +66,7 @@ h1
 
 </head>
 <body>
-<h1>Fiona & Alice's CTS Bus Times</h1>
+<h1 id="pageTitle" style="cursor: pointer;"></h1>
 
 <div class="stop" id="stop1">
     <h2>
@@ -202,6 +202,37 @@ function getColor(mins, rthresh, ythresh)
     return 'green';
 }
 
+function setModeFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    let mode = params.get('mode');
+
+    // Default to Fiona if no mode specified
+    if (!mode) {
+        mode = 'fiona';
+        params.set('mode', mode);
+        window.history.replaceState({}, '', `${location.pathname}?${params}`);
+    }
+
+    updateTitle(mode);
+    return mode;
+}
+
+function updateTitle(mode) {
+    const titleEl = document.getElementById('pageTitle');
+    const name = (mode === 'fiona') ? "Fiona" : "Alice";
+    titleEl.innerText = `${name}'s CTS Bus Times`;
+
+    // clicking the title switches mode
+    titleEl.onclick = () => {
+        const newMode = (mode === 'fiona') ? 'alice' : 'fiona';
+        const params = new URLSearchParams(window.location.search);
+        params.set('mode', newMode);
+        window.location.search = params.toString();
+    };
+}
+
+const currentMode = setModeFromURL();
+
 async function fetchBusTimes() 
 {
     for (let i = 0; i < stopUrls.length; i++) {
@@ -259,5 +290,6 @@ fetchBusTimes();
 // Refresh every 30 seconds
 setInterval(fetchBusTimes, 15000);
 </script>
+
 </body>
 </html>
