@@ -21,7 +21,7 @@ h1 {
 }
 .stop {
     width: 90%;
-    background-color: #ffc9db;
+    background-color: #ffe3ed;
     padding: 15px;
     margin: 10px 0;
     border-radius: 12px;
@@ -56,13 +56,13 @@ h1 {
     <p class="arrival">Loading...</p>
 </div>
 
-<div class="stop" id="stop3" style="background-color: #fff3cc;">
+<div class="stop" id="stop3" style="background-color: #fff6d8;">
     <h2>29th & Grant (Route 7 → Home Depot)</h2>
     <p class="arrival">Loading...</p>
     <p class="arrival">Loading...</p>
 </div>
 
-<div class="stop" id="stop4" style="background-color: #fff3cc;">
+<div class="stop" id="stop4" style="background-color: #fff6d8;">
     <h2>Circle & Four Acre (Route 7 → Witham Hill)</h2>
     <p class="arrival">Loading...</p>
     <p class="arrival">Loading...</p>
@@ -77,18 +77,11 @@ const stopUrls = [
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=11043'
 ];
 
-function getColor_fiona(mins) {
-    if (mins <= 5) return 'red';
-    if (mins <= 15) return 'yellow';
+function getColor(mins, rthresh, ythresh) {
+    if (mins <= rthresh) return 'red';
+    if (mins <= ythresh) return 'yellow';
     return 'green';
 }
-
-function getColor_alice(mins) {
-    if (mins <= 25) return 'red';
-    if (mins <= 40) return 'yellow';
-    return 'green';
-}
-
 
 async function fetchBusTimes() {
     for (let i = 0; i < stopUrls.length; i++) {
@@ -104,10 +97,12 @@ async function fetchBusTimes() {
             arrivalElems.forEach((el, j) => {
                 if (arrivals[j] !== undefined) {
                     el.innerText = `in ${arrivals[j]} minutes`;
-                    if(i < 2)
-                        el.className = 'arrival ' + getColor_fiona(arrivals[j]);
-                    else
-                        el.className = 'arrival ' + getColor_alice(arrivals[j]);
+                    let rthresh = 5, ythresh = 15;
+                    if (i == 2)
+                        rthresh = 25, ythresh = 40;
+                    if (i == 3)
+                        rthresh = 10, ythresh = 20;
+                    el.className = 'arrival ' + getColor(arrivals[j], rthresh, ythresh);
                     el.style.display = 'block'; 
                 } else {
                     el.style.display = 'none'; 
