@@ -71,7 +71,7 @@ h1
 <div class="stop" id="stop1">
     <h2>
         <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=14484" target="_blank">
-            Kings & Taylor (→ OSU)
+            Kings & Taylor (5 → OSU)
         </a>
     </h2>
     <p class="arrival">Loading...</p>
@@ -81,27 +81,77 @@ h1
 <div class="stop" id="stop2">
     <h2>
         <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=14599" target="_blank">
-            Kings & Monroe (→ Fred Meyer)
+            Kings & Monroe (5 → Fred Meyer)
         </a>
     </h2>
     <p class="arrival">Loading...</p>
     <p class="arrival">Loading...</p>
 </div>
 
-<div class="stop" id="stop3" style="background-color: #fff6d8;">
+<div class="stop" id="stop3" style="background-color: #ffc6c6;">
     <h2>
         <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=12567" target="_blank">
-            29th & Grant (→ Home Depot)
+            29th & Grant (7 → Home Depot)
         </a>
     </h2>
     <p class="arrival">Loading...</p>
     <p class="arrival">Loading...</p>
 </div>
 
-<div class="stop" id="stop4" style="background-color: #fff6d8;">
+<div class="stop" id="stop4" style="background-color: #ffc6c6;">
     <h2>
         <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=11043" target="_blank">
-            Circle & Four Acre (→ Witham Hill)
+            Circle & Four Acre (7 → Witham Hill)
+        </a>
+    </h2>
+    <p class="arrival">Loading...</p>
+    <p class="arrival">Loading...</p>
+</div>
+
+<div class="stop" id="stop5" style="background-color: #d2f2ff;">
+    <h2>
+        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=12477" target="_blank">
+            Monroe & 9th (1 → Witham Hill)
+        </a>
+    </h2>
+    <p class="arrival">Loading...</p>
+    <p class="arrival">Loading...</p>
+</div>
+
+<div class="stop" id="stop6" style="background-color: #d2f2ff;">
+    <h2>
+        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=14704" target="_blank">
+            Witham Hill & Woodland (1 → LBCC)
+        </a>
+    </h2>
+    <p class="arrival">Loading...</p>
+    <p class="arrival">Loading...</p>
+</div>
+
+<div class="stop" id="stop7" style="background-color: #f6d8ff;">
+    <h2>
+        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=10752" target="_blank">
+            9th & Fremont (2 → Home Depot)
+        </a>
+    </h2>
+    <p class="arrival">Loading...</p>
+    <p class="arrival">Loading...</p>
+</div>
+
+<div class="stop" id="stop8" style="background-color: #f6d8ff;">
+    <h2>
+        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=10723" target="_blank">
+            9th & Madison (2 → Home Depot)
+        </a>
+    </h2>
+    <p class="arrival">Loading...</p>
+    <p class="arrival">Loading...</p>
+</div>
+
+<div class="stop" id="stop9" style="background-color: #f6d8ff;">
+    <h2>
+        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=10396" target="_blank">
+            9th & Circle (2 → Route 1 Bus Stop)
         </a>
     </h2>
     <p class="arrival">Loading...</p>
@@ -110,11 +160,39 @@ h1
 
 <script>
 
+const params = new URLSearchParams(window.location.search);
+const mode = params.get('mode') || 'fiona'; // defaults to fiona
+
+if (mode === 'fiona') {
+    document.title = "Fiona's CTS Times";
+    document.querySelector('h1').innerText = "Fiona's CTS Bus Times";
+} else if (mode === 'alice') {
+    document.title = "Alice's CTS Times";
+    document.querySelector('h1').innerText = "Alice's CTS Bus Times";
+}
+
+const modeStops = {
+    fiona: [1, 2],
+    alice: [3, 4, 5, 6, 7, 8, 9]
+};
+
+// Hide stops that are not part of this mode
+document.querySelectorAll('.stop').forEach((el, index) => {
+    if (!modeStops[mode].includes(index + 1)) {
+        el.style.display = 'none';
+    }
+});
+
 const stopUrls = [
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14484',
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14599',
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=12567',
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=11043'
+    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=11043',
+    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=12477',
+    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14704',
+    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=10752',
+    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=10723',
+    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=10396'
 ];
 
 function getColor(mins, rthresh, ythresh) 
