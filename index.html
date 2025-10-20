@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="cts-icon.png">
-<link rel="icon" type="image/png" href="cts-favicon.png" sizes="32x32">
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="apple-touch-icon" href="cts-icon.png"/>
+<link rel="icon" type="image/png" href="cts-favicon.png" sizes="32x32"/>
 <title>CTS Bus Times</title>
 
 <style>
-body 
-{
+body {
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: #ffffff;
     margin: 0;
@@ -22,14 +20,13 @@ body
     align-items: center;
 }
 
-h1 
-{
+h1 {
     font-size: 1.5rem;
     margin-bottom: 20px;
+    cursor: pointer;
 }
 
-.stop 
-{
+.stop {
     width: 90%;
     background-color: #ffe3ed;
     padding: 15px;
@@ -37,36 +34,58 @@ h1
     border-radius: 12px;
     text-align: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    position: relative;
 }
 
-.stop h2 
-{
+.stop h2 {
     margin: 0 0 10px 0;
     font-size: 1.2rem;
 }
 
-.stop h2 a
-{
-    color: inherit;        /* use the same color as surrounding text */
-    text-decoration: none; /* remove underline */
-    cursor: pointer;       /* still shows pointer on hover */
+.stop h2 a {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
 }
 
-.arrival 
-{
+.arrival {
     font-size: 1.4rem;
     font-weight: bold;
+    margin: 6px 0;
 }
 
 .arrival.green { color: #008000; }
 .arrival.yellow { color: #ff9900; }
-.arrival.red { color: #ff0000 }
+.arrival.red { color: #ff0000; }
 
+/* Button to show other routes */
+.show-other-btn {
+    display: inline-block;
+    border: 1px solid #aaa;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: transparent;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+/* Container for hidden extra routes */
+.extra-routes {
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* Small route label inside extra list */
+.extra-route-line {
+    font-size: 1.0rem;
+    margin: 4px 0;
+}
 </style>
-
 </head>
 <body>
-<h1 id="pageTitle" style="cursor: pointer;"></h1>
+
+<h1 id="pageTitle"></h1>
 
 <div class="stop" id="stop1">
     <h2>
@@ -159,33 +178,47 @@ h1
 </div>
 
 <script>
-
+// ------------- Mode & Title -------------- //
 const params = new URLSearchParams(window.location.search);
-const mode = params.get('mode') || 'fiona'; // defaults to fiona
+const mode = params.get('mode') || 'fiona'; // default
 
-if (mode === 'fiona') 
-{
+if (mode === 'fiona') {
     document.title = "Fiona's CTS Times";
-    document.querySelector('h1').innerText = "Fiona's CTS Bus Times";
-} 
-else if (mode === 'alice') 
-{
+    document.getElementById('pageTitle').innerText = "Fiona's CTS Bus Times";
+} else {
     document.title = "Alice's CTS Times";
-    document.querySelector('h1').innerText = "Alice's CTS Bus Times";
+    document.getElementById('pageTitle').innerText = "Alice's CTS Bus Times";
 }
 
-const modeStops = 
-{
-    fiona: [1, 2],
-    alice: [3, 4, 5, 6, 7, 8, 9]
+function setModeFromTitle(mode) {
+    // clicking title toggles mode via URL change
+    const titleEl = document.getElementById('pageTitle');
+    titleEl.onclick = () => {
+        const newMode = (mode === 'fiona') ? 'alice' : 'fiona';
+        const p = new URLSearchParams(window.location.search);
+        p.set('mode', newMode);
+        window.location.search = p.toString();
+    };
+}
+setModeFromTitle(mode);
+
+// ------------- Config -------------- //
+const allowedRoutes = {
+  1: ["5"],
+  2: ["5"],
+  3: ["7"],
+  4: ["7"],
+  5: ["1","PK1"],
+  6: ["1","PK1"],
+  7: ["2"],
+  8: ["2"],
+  9: ["2"]
 };
 
-// Hide stops that are not part of this mode
-document.querySelectorAll('.stop').forEach((el, index) => 
-{
-    if (!modeStops[mode].includes(index + 1)) 
-        el.style.display = 'none';
-});
+const modeStops = {
+    fiona: [1,2],
+    alice: [3,4,5,6,7,8,9]
+};
 
 const stopUrls = [
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14484',
@@ -199,104 +232,179 @@ const stopUrls = [
     'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=10396'
 ];
 
-function getColor(mins, rthresh, ythresh) 
-{
+function getColor(mins, rthresh, ythresh) {
     if (mins <= rthresh) return 'red';
     if (mins <= ythresh) return 'yellow';
     return 'green';
 }
 
-function setModeFromURL() 
-{
-    const params = new URLSearchParams(window.location.search);
-    let mode = params.get('mode');
-
-    // default to fiona if no mode specified
-    if (!mode) 
-    {
-        mode = 'fiona';
-        params.set('mode', mode);
-        window.history.replaceState({}, '', `${location.pathname}?${params}`);
-    }
-
-    updateTitle(mode);
-    return mode;
+// Helper to create a DOM element easily
+function make(tag, attrs={}, text='') {
+    const el = document.createElement(tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    if (text) el.textContent = text;
+    return el;
 }
 
-function updateTitle(mode) 
-{
-    const titleEl = document.getElementById('pageTitle');
-    const name = (mode === 'fiona') ? "Fiona" : "Alice";
-    titleEl.innerText = `${name}'s CTS Bus Times`;
-
-    // clicking the title switches mode
-    titleEl.onclick = () => 
-    {
-        const newMode = (mode === 'fiona') ? 'alice' : 'fiona';
-        const params = new URLSearchParams(window.location.search);
-        params.set('mode', newMode);
-        window.location.search = params.toString();
-    };
-}
-
-const currentMode = setModeFromURL();
-
+// ------------- Parsing & Display -------------- //
 async function fetchBusTimes() 
 {
+    document.querySelectorAll('.stop').forEach((el, index) => {
+    if (!modeStops[mode].includes(index+1)) {
+        el.style.display = 'none';
+    } else {
+        el.style.display = 'block'; // ensure visible if in mode
+    }
+    });
+
     for (let i = 0; i < stopUrls.length; i++) {
-        try 
-        {
+        try {
             const response = await fetch(stopUrls[i]);
             const html = await response.text();
 
-            const matches = [...html.matchAll(/<li>In (\d+) min<\/li>/g)];
-            const arrivals = matches.map(m => parseInt(m[1], 10));
+            // First try to find route sections in the expected structure:
+            // <h5>... (Route X) ...</h5><ul> <li>In NN min</li> ...</ul>
+            // We capture route header text and its inner UL.
+            const sectionRegex = /<h5[^>]*>([\s\S]*?)<\/h5>\s*<ul[^>]*>([\s\S]*?)<\/ul>/gi;
+            let match;
+            const entries = []; // {routeId: "5"|"PK1", routeLabel: "witham hill/osu (Route 1) ...", mins: 32}
 
-            const arrivalElems = document.querySelectorAll(`#stop${i+1} .arrival`);
-            arrivalElems.forEach((el, j) => 
-            {
-                if (arrivals.length > 0 && arrivals[j] !== undefined) 
-                {
-                    el.innerText = `in ${arrivals[j]} minutes`; 
-                    let rthresh = 5, ythresh = 15; // witham hill & woodland, 9th & fremont
-                    if (i == 2) // 29th & grant
-                        rthresh = 25, ythresh = 40;
-                    if (i == 3 || i == 5 || i == 7) // circle & four acre, monroe & 9th, 9th & madison
-                        rthresh = 10, ythresh = 20;
-                    if (i == 8) // 9th & circle
-                        rthresh = 15, ythresh = 25;
-                    el.className = 'arrival ' + getColor(arrivals[j], rthresh, ythresh);
-                    el.style.display = 'block'; 
-                } 
-                else if (j == 0)
-                {
-                    el.innerText = "No arrivals in the next 60 min";
-                    el.className = 'arrival';
-                    el.style.display = 'block';
+            while ((match = sectionRegex.exec(html)) !== null) {
+                const header = match[1].replace(/<[^>]+>/g, '').trim(); // remove tags inside h5 if any
+                const ulHtml = match[2];
+                // extract route id from header, e.g., "(Route 1)" or "(Route PK1)"
+                const ridMatch = header.match(/Route\s*([A-Za-z0-9]+)/i);
+                const routeId = ridMatch ? ridMatch[1].toUpperCase() : null;
+                // find all <li>In N min</li> in this ul
+                const liMatches = [...ulHtml.matchAll(/<li>\s*In\s+(\d+)\s+min\s*<\/li>/gi)];
+                for (const lm of liMatches) {
+                    const mins = parseInt(lm[1], 10);
+                    entries.push({
+                        routeId: routeId || 'UNKNOWN',
+                        routeLabel: header,
+                        mins: mins
+                    });
                 }
-                else {
-                    el.style.display = 'none'; 
+            }
+
+            // Fallback: if no sections found, fall back to scanning all <li>In NN min</li> (no route info)
+            if (entries.length === 0) {
+                const allLi = [...html.matchAll(/<li>\s*In\s+(\d+)\s+min\s*<\/li>/gi)];
+                for (const lm of allLi) {
+                    entries.push({ routeId: null, routeLabel: null, mins: parseInt(lm[1],10) });
+                }
+            }
+
+            // Now split entries into allowed vs others for this stop
+            const stopIndex = i + 1;
+            const allowed = (allowedRoutes[stopIndex] || []).map(r => String(r).toUpperCase());
+            const allowedEntries = [];
+            const otherEntries = [];
+
+            entries.forEach(ent => {
+                // if routeId null (no label), treat as "other"
+                if (ent.routeId && allowed.includes(ent.routeId)) {
+                    allowedEntries.push(ent);
+                } else {
+                    otherEntries.push(ent);
                 }
             });
 
-        } catch (e) 
-        {
+            // DOM elements for this stop
+            const stopEl = document.getElementById(`stop${stopIndex}`);
+            const arrivalElems = stopEl.querySelectorAll('.arrival');
+
+            // First show allowedEntries (limit to first 2 by design)
+            const primaryToShow = allowedEntries.slice(0,2);
+            if (primaryToShow.length > 0) {
+                // fill arrivalElems with allowed entries
+                arrivalElems.forEach((el, j) => {
+                    if (primaryToShow[j]) {
+                        const mins = primaryToShow[j].mins;
+                        el.textContent = `in ${mins} minutes`;
+                        // thresholds per stop index (same as your logic)
+                        let rthresh = 5, ythresh = 15;
+                        if (i == 2) rthresh = 25, ythresh = 40; // stop3
+                        if (i == 3 || i == 5 || i == 7) rthresh = 10, ythresh = 20; // stop4, stop6, stop8
+                        if (i == 8) rthresh = 15, ythresh = 25; // stop9
+                        el.className = 'arrival ' + getColor(mins, rthresh, ythresh);
+                        el.style.display = 'block';
+                    } else {
+                        el.style.display = 'none';
+                    }
+                });
+            } else {
+                // No allowed entries: show the fallback message in the first arrival slot
+                arrivalElems.forEach((el, j) => {
+                    if (j === 0) {
+                        el.textContent = "No arrivals in the next 60 min";
+                        el.className = 'arrival';
+                        el.style.display = 'block';
+                    } else {
+                        el.style.display = 'none';
+                    }
+                });
+            }
+
+            // Remove any existing toggle / extra container to avoid duplicates
+            const existingToggle = stopEl.querySelector('.show-other-btn');
+            if (existingToggle) existingToggle.remove();
+            const existingExtra = stopEl.querySelector('.extra-routes');
+            if (existingExtra) existingExtra.remove();
+
+            // If there are otherEntries, add a toggle button and hidden container
+            if (otherEntries.length > 0) {
+                const btn = make('button', { type: 'button', class: 'show-other-btn' }, `+ Show other routes (${otherEntries.length})`);
+                stopEl.appendChild(btn);
+
+                const extraDiv = make('div', { class: 'extra-routes', style: 'display:none;' });
+                stopEl.appendChild(extraDiv);
+
+                // populate extraDiv with all other entries (route label or Route X)
+                otherEntries.forEach(ent => {
+                    const routeText = ent.routeId ? `Route ${ent.routeId}` : (ent.routeLabel ? ent.routeLabel : 'Other');
+                    const mins = ent.mins;
+                    const line = make('div', { class: 'extra-route-line' }, `${routeText} – in ${mins} minutes`);
+                    // apply color classes using thresholds same as above
+                    let rthresh = 5, ythresh = 15;
+                    if (i == 2) rthresh = 25, ythresh = 40;
+                    if (i == 3 || i == 5 || i == 7) rthresh = 10, ythresh = 20;
+                    if (i == 8) rthresh = 15, ythresh = 25;
+                    const colorClass = getColor(mins, rthresh, ythresh);
+                    line.classList.add('arrival', colorClass);
+                    extraDiv.appendChild(line);
+                });
+
+                // toggle behavior
+                let expanded = false;
+                btn.addEventListener('click', () => {
+                    expanded = !expanded;
+                    if (expanded) {
+                        extraDiv.style.display = 'block';
+                        btn.textContent = '− Hide other routes';
+                    } else {
+                        extraDiv.style.display = 'none';
+                        btn.textContent = `+ Show other routes (${otherEntries.length})`;
+                    }
+                });
+            }
+
+        } catch (e) {
             console.error(e);
             const arrivalElems = document.querySelectorAll(`#stop${i+1} .arrival`);
             arrivalElems.forEach(el => {
                 el.innerText = 'Error: No bus time found';
                 el.className = 'arrival';
+                el.style.display = 'block';
             });
         }
-    }
-}
+    } // end for
+} // end fetchBusTimes
 
-// initial bus time fetch
+// initial fetch
 fetchBusTimes();
-
-// refresh every 15 seconds
+// refresh every 15s (your current choice)
 setInterval(fetchBusTimes, 15000);
 </script>
-
 </body>
 </html>
