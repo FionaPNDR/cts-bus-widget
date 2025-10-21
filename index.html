@@ -362,8 +362,18 @@ async function fetchBusTimes()
 
             const times = shownEntries;
 
-            while(arrivals.length < times.length)
-                currStop.appendChild(make("p", { class: "arrival-time" }, "")); // Adds empty placeholders as needed
+            let arrivals = currStop.querySelectorAll(".arrival-time"); // Create static copy of NodeList before we mutate to avoid lag/runaway
+
+            if(arrivals.length < times.length)
+            {
+                for(let i = 0; i < (times.length - arrivals.length); i++)
+                {
+                    const newP = make("p", { class: "arrival-time" }, ""); // Adds empty placeholders as needed
+                    currStop.appendChild(newP);
+                    arrivals.push(newP);
+                }
+            }
+            
             
             if(times.length > 0)                        // If we have times to display:
             {
