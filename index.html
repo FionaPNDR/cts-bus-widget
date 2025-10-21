@@ -1,410 +1,456 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<link rel="apple-touch-icon" href="cts-icon.png"/>
-<link rel="icon" type="image/png" href="cts-favicon.png" sizes="32x32"/>
-<title>CTS Bus Times</title>
+<html lang = "en">
 
-<style>
-body {
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #ffffff;
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+<head> <!-- The "head" section is where we keep all of the metadata for our website; stuff that isn't going to be displayed, but is nonetheless important-->
 
-h1 {
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-    cursor: pointer;
-}
+    <meta charset = "UTF-8"/> <!-- Essentially just saying that we're using unicode characters -->
+    <meta name = "viewport" content = "width = device-width, initial-scale = 1.0"/> <!-- Sets up viewport, having it scale to device-width and setting initial scale to 1.0 -->
+    <link rel = "icon" type = "image/png" href = "cts-favicon.png" sizes = "32x32"/> <!-- Sets "favicon", which is the little icon for browser tabs -->
 
-.stop {
-    width: 90%;
-    background-color: #ffe3ed;
-    padding: 15px;
-    margin: 12px 0;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    position: relative;
-}
+    <!-- Apple/iPhone Setup -->
+    <meta name = "apple-mobile-web-app-capable" content = "yes"/> <!-- Tells any iPhone which uses this device that it can be used as a Safari applet with no top bar -->
+    <meta name = "apple-mobile-web-app-status-bar-style" content = "black-translucent"/> <!-- Sets style of iPhone status bar when being used as Safari applet -->
+    <link rel = "apple-touch-icon" href = "cts-icon.png"/> <!-- Sets the default icon when being used as Safari applet -->
 
-.stop h2 {
-    margin: 0 0 10px 0;
-    font-size: 1.2rem;
-}
+    <title>CTS Bus Times v2.0</title>
 
-.stop h2 a {
-    color: inherit;
-    text-decoration: none;
-    cursor: pointer;
-}
+    <style> /* Style is where we write in CSS to specify visual aspects of HTML elements */
 
-.arrival {
-    font-size: 1.4rem;
-    font-weight: bold;
-    margin: 6px 0;
-}
+        :root /* Essentially a CSS pseudo-class that lets us set global variables for things like color */
+        {
+            --background: #ffffff;
+            --show-button: #aaaaaa;
+            --stop-text: #000000;
+            --shadow: #00000033; /* In hex we can add an extra byte to describe transparency; 0x33 in hex = 0.2 in rgba */
+            --route1: #d4eeff;
+            --route2: #f2dcff;
+            --route5: #ffe3ed;
+            --route7: #ffd4d4;
+            --arrival-urgent: #ff0000;
+            --arrival-soon: #ff9900;
+            --arrival-distant: #008000;
+        }
 
-.arrival.green { color: #008000; }
-.arrival.yellow { color: #ff9900; }
-.arrival.red { color: #ff0000; }
+        body /* Defines the style of the body; that is, the entirety of displayed elements */
+        {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;     /* Sets font to Apple's sans-serif */
+            background-color: var(--background);                            /* Sets background color of webpage to match global variable */
+            margin: 0;                                                      /* Defines the space around an element, outside of its border (outer margin) */
+            padding: 20px;                                                  /* Defines the space between the content of an element and its border (inner margin) */
+            display: flex;                                                  /* Defines body and all of its children as "flex" elements with varying size */
+            flex-direction: column;                                         /* Sets flex mode to "column", which arranges flex elements vertically. */
+            align-items: center;                                            /* Sets the alignment of flex elements to be centered. */
+        }
 
-/* Button to show other routes */
-.show-other-btn {
-    display: inline-block;
-    border: 1px solid #aaa;
-    padding: 6px 10px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    background: transparent;
-    cursor: pointer;
-    margin-top: 8px;
-}
+        h1 /* h1 is the tag which describes the heading of the webpage */
+        {
+            font-size: 1.5rem;          /* rem stands for "root em", a relative unit of measurement for sizing elements */
+            margin-bottom: 20px;        /* Defines the space between the bottom edge of an element's border and the top edge of the next */
+            cursor: pointer;            /* We use this to change the cursor when hovering over h1 to indicate that it is a link to change modes */
+        }
 
-/* Container for hidden extra routes */
-.extra-routes {
-    margin-top: 10px;
-    text-align: center;
-}
+        .stop /* stop is a class we're defining to describe the behavior of our bus stop boxes */
+        {
+            width: 90%;                             /* By using a percentage, we're saying that the width is 90% of its parent container (which is just body) scaled relatively */
+            margin: 12px 0px;                       /* This is shorthand for describing both the vertical (12px) margin and horizontal (0px) margin */
+            padding: 15px;
+            border-radius: 12px;                    /* Creates rounded corners with radius of 12px; can also be set with percentage of element size, though this would make a weird oval */
+            text-align: center;
+            position: relative;                     /* Specifies that any changes to an element's position are always relative to its original placement */
+            box-shadow: 0px 2px 5px var(--shadow);  /* Creates a box shadow; syntax is <x-offset> <y-offset> <blur-radius> <color> */
+            color: var(--stop-text);                /* Sets color of stop text to color stored in global variables */
+        }
 
-/* Small route label inside extra list */
-.extra-route-line {
-    font-size: 1.0rem;
-    margin: 4px 0;
-}
-</style>
+        .stop h2 /* Here we're describing the header of each stop, where the name of the stop and the route description (e.g. 5 --> OSU) are located */
+        {
+            font-size: 1.2rem;
+            margin: 0px 0px 10px 0px;   /* When four values are specified for margin, it's TOP/RIGHT/BOTTOM/LEFT; this is therefore setting the bottom margin to 10px and the rest to 0px */
+        }
+
+        .stop h2 a /* The "a" tag describes anchors/links, and so this is describing the style of anchors/lengths within the stop header */
+        {
+            color: inherit;             /* Rather than a blue link, we inherit the color of the title, allowing for an "invisible link" feel */
+            text-decoration: none;      /* Removes underline from link */
+            cursor: pointer;            /* Again, changes cursor when hovering to indicate that it is a link */
+        }
+
+        .arrival-time /* Style for the display of arrival times */
+        {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin: 6px 0px;            /* When two values are specified for margin, its vertical & horizontal. This provides a 6px top/bottom margin and zero left/right margin */
+        }
+
+        .other-btn /* Style for "Show other routes" button */
+        {
+            display: inline-block;                  /* Creates a block element which is "inline", meaning we can embed an element with margins, padding etc. */
+            border: 1px solid var(--show-button);   /* Creates a border around the block 1px wide, solid, and with color specified by global variable */
+            margin-top: 8px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: transparent;                /* Creates a transparent background so that the button matches the color of the box */
+            cursor: pointer;                        /* It's a clickable element, so we change the cursor */
+        }
+
+        .extra-routes /* Describes style of container shown when "Show other routes" button is clicked */
+        {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .extra-routes-list /* Describes style of the actual list elements containing the info for the extra routes */
+        {
+            font-size: 1.0rem;
+            margin: 5px 0px;        /* Describes line spacing; top/bottom is 5px, no need for horizontal margin */
+        }
+
+        .stop.route1    { background-color: var(--route1); }
+        .stop.route2    { background-color: var(--route2); }
+        .stop.route5    { background-color: var(--route5); }
+        .stop.route7    { background-color: var(--route7); }
+
+        .arrival-time.urgent    { color: var(--arrival-urgent); }   /* Defining color variables to make them accessible to JavaScript later */
+        .arrival-time.soon      { color: var(--arrival-soon); }
+        .arrival-time.distant   { color: var(--arrival-distant); }
+
+        
+
+    </style>
+
 </head>
-<body>
 
-<h1 id="pageTitle"></h1>
+<body> <!-- Within <body>, we place the actual elements within the webpage. -->
 
-<div class="stop" id="stop1">
-    <h2>
-        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=14484" target="_blank">
-            Kings & Taylor (5 → OSU)
-        </a>
-    </h2>
-    <p class="arrival">Loading...</p>
-    <p class="arrival">Loading...</p>
-</div>
+    <h1 id = "pageTitle"></h1> <!-- Creates identifier "pageTitle" for h1 that allows us to dynamically modify the title later in the JavaScript portion -->
 
-<div class="stop" id="stop2">
-    <h2>
-        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=14599" target="_blank">
-            Kings & Monroe (5 → Fred Meyer)
-        </a>
-    </h2>
-    <p class="arrival">Loading...</p>
-    <p class="arrival">Loading...</p>
-</div>
+    <!-- Creates identifier "stopsContainer" for h1 for us to create stops later in JavaScript. We re-specify some CSS elements related to flex elements
+         because those settings are only inhereted from <body> by direct children, and this <div> wrapper prevents our stops from being direct children. -->
 
-<div class="stop" id="stop3" style="background-color: #ffd4d4;">
-    <h2>
-        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=12567" target="_blank">
-            29th & Grant (7 → Home Depot)
-        </a>
-    </h2>
-    <p class="arrival">Loading...</p>
-    <p class="arrival">Loading...</p>
-</div>
+    <div id = "stopsContainer" style = "width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
 
-<div class="stop" id="stop4" style="background-color: #ffd4d4;">
-    <h2>
-        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=11043" target="_blank">
-            Circle & Four Acre (7 → Witham Hill)
-        </a>
-    </h2>
-    <p class="arrival">Loading...</p>
-    <p class="arrival">Loading...</p>
-</div>
+<script> // This is where the JavaScript which describes the behavior of our elements goes.
 
-<div class="stop" id="stop5" style="background-color: #d4eeff;">
-    <h2>
-        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=14704" target="_blank">
-            Witham Hill & Woodland (1 → LBCC)
-        </a>
-    </h2>
-    <p class="arrival">Loading...</p>
-    <p class="arrival">Loading...</p>
-</div>
-
-<div class="stop" id="stop6" style="background-color: #d4eeff;">
-    <h2>
-        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=12477" target="_blank">
-            Monroe & 9th (1 → Witham Hill)
-        </a>
-    </h2>
-    <p class="arrival">Loading...</p>
-    <p class="arrival">Loading...</p>
-</div>
-
-<div class="stop" id="stop7" style="background-color: #f2dcff;">
-    <h2>
-        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=10752" target="_blank">
-            9th & Fremont (2 → Home Depot)
-        </a>
-    </h2>
-    <p class="arrival">Loading...</p>
-    <p class="arrival">Loading...</p>
-</div>
-
-<div class="stop" id="stop8" style="background-color: #f2dcff;">
-    <h2>
-        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=10723" target="_blank">
-            9th & Madison (2 → Home Depot)
-        </a>
-    </h2>
-    <p class="arrival">Loading...</p>
-    <p class="arrival">Loading...</p>
-</div>
-
-<div class="stop" id="stop9" style="background-color: #f2dcff;">
-    <h2>
-        <a href="https://www.corvallistransit.com/rtt/public/?page=text&pln=10396" target="_blank">
-            9th & Circle (2 → Route 1 Bus Stop)
-        </a>
-    </h2>
-    <p class="arrival">Loading...</p>
-    <p class="arrival">Loading...</p>
-</div>
-
-<script>
-// ------------- Mode & Title -------------- //
-const params = new URLSearchParams(window.location.search);
-const mode = params.get('mode') || 'fiona'; // default
-
-if (mode === 'fiona') {
-    document.title = "Fiona's CTS Times";
-    document.getElementById('pageTitle').innerText = "Fiona's CTS Bus Times";
-} else {
-    document.title = "Alice's CTS Times";
-    document.getElementById('pageTitle').innerText = "Alice's CTS Bus Times";
-}
-
-function setModeFromTitle(mode) {
-    // clicking title toggles mode via URL change
-    const titleEl = document.getElementById('pageTitle');
-    titleEl.onclick = () => {
-        const newMode = (mode === 'fiona') ? 'alice' : 'fiona';
-        const p = new URLSearchParams(window.location.search);
-        p.set('mode', newMode);
-        window.location.search = p.toString();
-    };
-}
-setModeFromTitle(mode);
-
-// ------------- Config -------------- //
-const allowedRoutes = {
-  1: ["5"],
-  2: ["5"],
-  3: ["7"],
-  4: ["7"],
-  5: ["1","PK1"],
-  6: ["1","PK1"],
-  7: ["2"],
-  8: ["2"],
-  9: ["2"]
-};
-
-const modeStops = {
-    fiona: [1,2],
-    alice: [3,4,5,6,7,8,9]
-};
-
-const stopUrls = [
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14484',
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14599',
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=12567',
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=11043',
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=14704',
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=12477',
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=10752',
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=10723',
-    'https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=10396'
+const stops = // Specifies data about each stop
+[
+    {   
+        id: 1,
+        name: "Kings & Taylor (5 → OSU)",
+        routes: ["5"],
+        color: "route5",
+        thresholds: [5, 15],
+        pin: "14484" },
+    { 
+        id: 2,
+        name: "Kings & Monroe (5 → Fred Meyer)",
+        routes: ["5"],
+        color: "route5",
+        thresholds: [5, 15],
+        pin: "14599" },
+    { 
+        id: 3,
+        name: "29th & Grant (7 → Home Depot)",
+        routes: ["7"],
+        color: "route7",
+        thresholds: [25, 40],
+        pin: "12567" },
+    { 
+        id: 4,
+        name: "Circle & Four Acre (7 → Witham Hill)",
+        routes: ["7"],
+        color: "route7",
+        thresholds: [10, 20],
+        pin: "11043" },
+    { 
+        id: 5,
+        name: "Witham Hill & Woodland (1 → LBCC)",
+        routes: ["1", "PK1"],
+        color: "route1",
+        thresholds: [10, 20],
+        pin: "14704" },
+    { 
+        id: 6,
+        name: "Monroe & 9th (1 → Witham Hill)",
+        routes: ["1", "PK1"],
+        color: "route1",
+        thresholds: [10, 20],
+        pin: "12477" },
+    { 
+        id: 7,
+        name: "9th & Fremont (2 → Home Depot)",
+        routes: ["2"],
+        color: "route2",
+        thresholds: [10, 20],
+        pin: "10752" },
+    { 
+        id: 8,
+        name: "9th & Madison (2 → Home Depot)",
+        routes: ["2"],
+        color: "route2",
+        thresholds: [10, 20],
+        pin: "10723" },
+    { 
+        id: 9,
+        name: "9th & Circle (2 → Route 1 Bus Stop)",
+        routes: ["2"],
+        color: "route2",
+        thresholds: [15, 25],
+        pin: "10396" }
 ];
 
-function getColor(mins, rthresh, ythresh) {
-    if (mins <= rthresh) return 'red';
-    if (mins <= ythresh) return 'yellow';
-    return 'green';
-}
-
-// Helper to create a DOM element easily
-function make(tag, attrs={}, text='') {
-    const el = document.createElement(tag);
-    for (const k in attrs) el.setAttribute(k, attrs[k]);
-    if (text) el.textContent = text;
-    return el;
-}
-
-// ------------- Parsing & Display -------------- //
-async function fetchBusTimes() 
+const modeStopLists = // Defines which stops belong to Fiona and which belong to Alice
 {
-    document.querySelectorAll('.stop').forEach((el, index) => {
-    if (!modeStops[mode].includes(index+1)) {
-        el.style.display = 'none';
-    } else {
-        el.style.display = 'block'; // ensure visible if in mode
-    }
-    });
+    fiona: [1, 2],
+    alice: [3, 4, 5, 6, 7, 8, 9]
+};
 
-    for (let i = 0; i < stopUrls.length; i++) {
-        try {
-            const response = await fetch(stopUrls[i]);
-            const html = await response.text();
+/* At the end of a URL, There is something called a "query string" which specifies certain parameters. We're using this to specify a Fiona/Alice "mode" so that we know
+   which stops we ought to be displaying. URLSearchParams(window.location.search) checks the part of the URL after the "?"; the query string. It gets the value of mode,
+   which will either be "fiona", "alice", or NULL/unspecified; if it returns false, we instead use "fiona" by default*/
 
-            // First try to find route sections in the expected structure:
-            // <h5>... (Route X) ...</h5><ul> <li>In NN min</li> ...</ul>
-            // We capture route header text and its inner UL.
+let currentMode = new URLSearchParams(window.location.search).get("mode") || "fiona"; // We use "let" instead of "const" so the variable can be modified
+if (!currentMode) // If no mode was specified
+    currentMode = "fiona"; // Use "fiona" mode by default
+
+// Four our first function, let's identify what the mode is and set our title and variables accordingly.
+
+const title = document.getElementById("pageTitle"); // We store the pageTitle element inside new variable "title"
+
+function updateTitle(mode)
+{
+    const name = (mode === "fiona") ? "Fiona" : "Alice";    // Ternary operator; if "mode === fiona" (=== is a typeless comparator) is true, then name = "Fiona", else "Alice"
+    title.innerText = `${name}'s CTS Bus Times`;            // Specifies header text; Backticks create "template literal" strings, allowing for things like embedeed variables via ${}, etc.
+
+    title.onclick = function()
+    {
+        const newMode = (mode === "fiona") ? "alice" : "fiona"      // Similar to before; if mode is "fiona", switch to "alice", else switch to "fiona"
+        const params = new URLSearchParams(window.location.search);  // Parses query string into an object where we can get/set parameters
+        params.set("mode", newMode);                                // Updates mode parameter in query string
+        window.location.search = params.toString();                 // Formats it from object back into a string and updates URL. Reloads page automatically
+    };
+}
+
+// Now let's actually create our stops based on the data we stored earlier.
+
+// First, let's make a helper function to make generating HTML elements easier.
+
+function make(tag, attributes = {}, text = '')      // Make a new HTML element of type "tag"; e.g. 'div', 'h1', etc. with given attributes and text
+{
+    const element = document.createElement(tag);    // Creates element with specified tag
+
+    for(const i in attributes)                      // For every attribute provided
+        element.setAttribute(i, attributes[i]);     // Set it as one of the element's attributes
+
+    if(text)                                        // If text was provided
+        element.textContent = text;                 // Set it as the element's text content
+
+    return element;
+}
+
+// Now, we can generate each stop.
+
+const container = document.getElementById("stopsContainer"); // Stores previously defined stopContainer (<div>)
+
+stops.forEach(function(stop)                            // Function which runs for each element in the "stop" data structure. Easier to understand if referencing hardcoded html version
+{
+    if(!modeStopLists[currentMode].includes(stop.id))   // We don't generate the stop element if its ID isn't included in this mode's stop list
+        return;
+
+    /* Here, class stop + stop.color creates class like "stop route5"; we have previously specified that any element which is .stop.route5 will take on route5's color. Further, 
+       stop + stop.id makes it easy for us to refer to the stop later by creating "stop1", "stop2", etc. */
+    
+    const newStop = make("div", { class: "stop " + stop.color, id: "stop" + stop.id});
+
+    const h2 = make("h2");                              // We make sub-heading "h2" for the stop's title
+
+    /* Again 'a' describes a link or anchor, so this is where we create a link to the stop's page which also displays the title of the stop. We take advantage of the fact that all of the 
+       CTS stop links are identical but for the 5-digit stop ID at the end in order to just append this ID onto the link here. target: "_blank" is just an HTML attribute that tells the
+       browser to open the linked document in a new browser tab or window. */
+
+    const a = make("a", { href: `https://www.corvallistransit.com/rtt/public/?page=text&pln=${stop.pin}`, target: "_blank"}, `${stop.name}`); 
+
+    h2.appendChild(a);                                  // Specifying a as the child of h2
+    newStop.appendChild(h2);                            // Specifying h2 as the child of newStop
+
+    newStop.appendChild(make("p", { class: "arrival-time" }, "Loading..."));     // Simply creates paragraph <p> element which serves as a "Loading" placeholder for arrival times
+    newStop.appendChild(make("p", { class: "arrival-time" }, "Loading..."));
+
+    container.appendChild(newStop);                     // Specifying newStop as the child of container
+});
+
+// This function just serves to help us fetch the correct color for our arrival times based on the minutes remaining and the red/yellow thresholds
+
+function getColor(mins, rthresh, ythresh)
+{
+    if(mins <= rthresh) 
+        return "urgent";
+    if(mins <= ythresh)
+        return "soon";
+    else
+        return "distant";
+}
+
+// Now we can finally parse the CTS website for bus arrival times:
+
+async function fetchBusTimes()
+{
+    for(let stop of stops) // for every element "stop" of the data structure "stops"
+    {
+        if(!modeStopLists[currentMode].includes(stop.id))   // Skip this stop if its ID isn't in this mode's stop list
+            continue;
+        
+        const currStop = document.getElementById("stop" + stop.id); // We fetch using the stop IDs established earlier
+        const arrivals = currStop.querySelectorAll(".arrival-time"); // Grabs our two placeholder arrival times established earlier (currently displaying "Loading...")
+
+        try
+        {
+            // Fetch the stop's page from CTS's website using a proxy
+            const response = await fetch(`https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=${stop.pin}`); // Fetch the site data, specify link with 5-digit id
+            const html = await response.text(); // Get the raw HTML as a string
+
+            // Now we can parse the HTML for our times and routes. Our arrival headers, which include the routes, are stored in h5. Our times are stored in list items <li> within an unordered list <ul>.
             const sectionRegex = /<h5[^>]*>([\s\S]*?)<\/h5>\s*<ul[^>]*>([\s\S]*?)<\/ul>/gi;
-            let match;
-            const entries = []; // {routeId: "5"|"PK1", routeLabel: "witham hill/osu (Route 1) ...", mins: 32}
+            /* Let's walk through that. 
+            1) Start and end of the regex are specified with "/". Any slashes within must be canceled like "\/".
+            2) <h5[^>]*>:   [^>]* means "any chracters except >", allowing for matching attributes within h5.
+            3) ([\s\S]*?):  Denotes a character set of whitespace (\s) and non-whitespace (\S). *? -> match 0 or more of any character, 
+                            "non-greedy" (stops at next ">"). Parentheses makes this part of "group 1", the text within h5.
+            4) <\/h5>:      Matches the closing <h5> tag; the slash needs to be canceled.
+            5) \s*:         Matches optional whitespace (like new lines) between <h5> and the next element
+            6) <ul[&>]*>    Matches the <ul> tag, accounting for attributes.
+            7) (\s\S)*?)    Again, captures any content within <ul>. This is group 2.
+            8) <\/ul>       Matches the closing <ul> tag.
+            9) /gi          Ends the regex, flags "g" and "i". g is global search (find all matches, not just first) and i is case-insensitive matching. */
 
-            while ((match = sectionRegex.exec(html)) !== null) {
-                const header = match[1].replace(/<[^>]+>/g, '').trim(); // remove tags inside h5 if any
-                const ulHtml = match[2];
-                // extract route id from header, e.g., "(Route 1)" or "(Route PK1)"
-                const ridMatch = header.match(/Route\s*([A-Za-z0-9]+)/i);
-                const routeId = ridMatch ? ridMatch[1].toUpperCase() : null;
-                // find all <li>In N min</li> in this ul
-                const liMatches = [...ulHtml.matchAll(/<li>\s*In\s+(\d+)\s+min\s*<\/li>/gi)];
-                for (const lm of liMatches) {
-                    const mins = parseInt(lm[1], 10);
-                    entries.push({
-                        routeId: routeId || 'UNKNOWN',
-                        routeLabel: header,
-                        mins: mins
+            let match;
+            const entries = []; // We'll store route/arrival times here
+
+            while (match = sectionRegex.exec(html)) // We run the regex on our raw html
+            {
+                const header = match[1].replace(/<[^>]*>/g, '').trim();             // Strip tags from <h5>
+                const routeMatch = header.match(/Route\s*([A-Za-z0-9]+)/i);         // Gets route string
+                const routeID = routeMatch ? routeMatch[1].toUpperCase() : null;    // The number should be the second element in routeMatch's list of findings (bc of space)
+
+                const timeMatches = [...match[2].matchAll(/<li>\s*In\s+(\d+)\s+min\s*<\/li>/gi)]; // Parses <li> within <ul> all for "in x min" strings and stores in indicies [0, 1, 2]
+                for(let time of timeMatches)
+                {
+                    entries.push(                   // Places elements at end of array
+                    {            
+                        routeID: routeID,           // Previously obtained route ID
+                        routeLabel: header,         // Full text within <h5>
+                        mins: parseInt(time[1], 10)   // Minutes until arrival (parsed in base 10). Number of minutes should be second element ("in" is first, "min" is third)
                     });
                 }
             }
 
-            // Fallback: if no sections found, fall back to scanning all <li>In NN min</li> (no route info)
-            if (entries.length === 0) {
-                const allLi = [...html.matchAll(/<li>\s*In\s+(\d+)\s+min\s*<\/li>/gi)];
-                for (const lm of allLi) {
-                    entries.push({ routeId: null, routeLabel: null, mins: parseInt(lm[1],10) });
-                }
-            }
+            // Now let's specify hidden vs. shown entries
 
-            // Now split entries into allowed vs others for this stop
-            const stopIndex = i + 1;
-            const allowed = (allowedRoutes[stopIndex] || []).map(r => String(r).toUpperCase());
-            const allowedEntries = [];
-            const otherEntries = [];
+            const shown = stop.routes.map(route => String(route).toUpperCase());    // Gets list of shown routes for each stop as strings, normalized capitalization
+            const shownEntries = [];
+            const hiddenEntries = [];
 
-            entries.forEach(ent => {
-                // if routeId null (no label), treat as "other"
-                if (ent.routeId && allowed.includes(ent.routeId)) {
-                    allowedEntries.push(ent);
-                } else {
-                    otherEntries.push(ent);
-                }
+            entries.forEach(function(entry)                                         // For every entry we've found on the page
+            {
+                if(entry.routeID && shown.includes(entry.routeID))                  // If the ID matches that of one of our non-hidden routes, we can add it to shownEntries[]
+                    shownEntries.push(entry);
+                else    
+                    hiddenEntries.push(entry);
             });
 
-            // DOM elements for this stop
-            const stopEl = document.getElementById(`stop${stopIndex}`);
-            const arrivalElems = stopEl.querySelectorAll('.arrival');
 
-            // First show allowedEntries (limit to first 2 by design)
-            const primaryToShow = allowedEntries.slice(0,2);
-            if (primaryToShow.length > 0) {
-                // fill arrivalElems with allowed entries
-                arrivalElems.forEach((el, j) => {
-                    if (primaryToShow[j]) {
-                        const mins = primaryToShow[j].mins;
-                        el.textContent = `in ${mins} minutes`;
-                        // thresholds per stop index (same as your logic)
-                        let rthresh = 5, ythresh = 15;
-                        if (i == 2) rthresh = 25, ythresh = 40; // stop3
-                        if (i == 3 || i == 5 || i == 7) rthresh = 10, ythresh = 20; // stop4, stop6, stop8
-                        if (i == 8) rthresh = 15, ythresh = 25; // stop9
-                        el.className = 'arrival ' + getColor(mins, rthresh, ythresh);
-                        el.style.display = 'block';
-                    } else {
-                        el.style.display = 'none';
+            // Next, let's actually display the arrival times that we're showing by default:
+
+            const times = shownEntries.slice(0,2);      // We can only show two arrival times; slice specifies beginning, end index as [0, 2) (index 2 isn't included)
+            
+            if(times.length > 0)                        // If we have times to display:
+            {
+                arrivals.forEach(function(element,i)
+                {
+                    if(times[i])
+                    {
+                        element.textContent = `in ${times[i].mins} minutes`;
+                        element.className = "arrival-time " + getColor(times[i].mins, stop.thresholds[0], stop.thresholds[1]); // Sets class to stop."color", so that it gets the correct color
+                        element.style.display = "block";
                     }
+                    else
+                        element.style.display = "none"; // Hide unused <p> elements (such as if there is only one time given)
                 });
-            } else {
-                // No allowed entries: show the fallback message in the first arrival slot
-                arrivalElems.forEach((el, j) => {
-                    if (j === 0) {
-                        el.textContent = "No arrivals in the next 60 min";
-                        el.className = 'arrival';
-                        el.style.display = 'block';
-                    } else {
-                        el.style.display = 'none';
-                    }
+            }
+            else // In the event that we have no times:
+            {
+                arrivals.forEach(function(element, i) 
+                {
+                    if(i === 0)
+                    {
+                        element.textContent = "No arrivals in the next 60 min";
+                        element.className = "arrival-time";
+                        element.style.display = "block";
+                    }   
+                    else
+                        element.style.display = "none"; // Hide unused <p> elements (no need to display same message twice)
                 });
             }
 
-            // Remove any existing toggle / extra container to avoid duplicates
-            const existingToggle = stopEl.querySelector('.show-other-btn');
-            if (existingToggle) existingToggle.remove();
-            const existingExtra = stopEl.querySelector('.extra-routes');
-            if (existingExtra) existingExtra.remove();
 
-            // If there are otherEntries, add a toggle button and hidden container
-            if (otherEntries.length > 0) {
-                const btn = make('button', { type: 'button', class: 'show-other-btn' }, `+ Show other routes (${otherEntries.length})`);
-                stopEl.appendChild(btn);
+            // Now let's implement the "show other routes" button. First, we want to clear any existing "show other routes" elements if they exist:
 
-                const extraDiv = make('div', { class: 'extra-routes', style: 'display:none;' });
-                stopEl.appendChild(extraDiv);
+            const oldButton = currStop.querySelector(".other-btn"); 
+            const oldList = currStop.querySelector(".extra-routes");
+            if (oldButton)
+                oldButton.remove();
+            if (oldList)
+                oldList.remove();
 
-                // populate extraDiv with all other entries (route label or Route X)
-                otherEntries.forEach(ent => {
-                    const routeText = ent.routeId ? `Route ${ent.routeId}` : (ent.routeLabel ? ent.routeLabel : 'Other');
-                    const mins = ent.mins;
-                    const line = make('div', { class: 'extra-route-line' }, `${routeText} – in ${mins} minutes`);
-                    // apply color classes using thresholds same as above
-                    let rthresh = 5, ythresh = 15;
-                    if (i == 2) rthresh = 25, ythresh = 40;
-                    if (i == 3 || i == 5 || i == 7) rthresh = 10, ythresh = 20;
-                    if (i == 8) rthresh = 15, ythresh = 25;
-                    const colorClass = getColor(mins, rthresh, ythresh);
-                    line.classList.add('arrival', colorClass);
-                    extraDiv.appendChild(line);
+            if (hiddenEntries.length > 0)
+            {
+                const button = make("button", { class: "other-btn"}, `+ Show other routes (${hiddenEntries.length})`); // Create our button element
+                currStop.appendChild(button); // Make button child of current stop
+
+                const routeList = make("div", { class: "extra-routes", style: "display:none;" }); // Create our hidden routes list element
+                currStop.appendChild(routeList);
+
+                hiddenEntries.forEach(function(entry) 
+                {
+                    const routeText = entry.routeID ? `Route ${entry.routeID}` : "Error: No route ID found";
+
+                    const line = make ("div", { class: "extra-routes-list arrival-time " + getColor(entry.mins, stop.thresholds[0], stop.thresholds[1]) }, `${routeText} - in ${entry.mins} minutes`);
+
+                    routeList.appendChild(line);
                 });
 
-                // toggle behavior
                 let expanded = false;
-                btn.addEventListener('click', () => {
+                button.addEventListener("click", function()
+                {
                     expanded = !expanded;
-                    if (expanded) {
-                        extraDiv.style.display = 'block';
-                        btn.textContent = '− Hide other routes';
-                    } else {
-                        extraDiv.style.display = 'none';
-                        btn.textContent = `+ Show other routes (${otherEntries.length})`;
-                    }
+                    routeList.style.display = expanded ? "block" : "none";
+                    button.textContent = expanded ? `- Hide other routes` : `+ Show other routes (${hiddenEntries.length})`;
                 });
             }
 
-        } catch (e) {
+
+        }
+        catch (e) // If fetching/parsing goes wrong, show error message
+        {
             console.error(e);
-            const arrivalElems = document.querySelectorAll(`#stop${i+1} .arrival`);
-            arrivalElems.forEach(el => {
-                el.innerText = 'Error: No bus time found';
-                el.className = 'arrival';
-                el.style.display = 'block';
+            arrivals.forEach(function(element, i)
+            {
+                if(i === 0)
+                {
+                    element.textContent = "Error fetching times from CTS website";
+                    element.className = "arrival-time";
+                    element.style.display = "block";
+                }
+                else
+                    element.style.display = "none";
             });
         }
-    } // end for
-} // end fetchBusTimes
+    }
+}
 
-// initial fetch
+updateTitle(currentMode);
 fetchBusTimes();
-// refresh every 15s (your current choice)
-setInterval(fetchBusTimes, 15000);
+setInterval(fetchBusTimes,15000);
+
 </script>
 </body>
 </html>
