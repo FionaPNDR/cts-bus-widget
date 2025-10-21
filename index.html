@@ -91,6 +91,7 @@
             font-size: 0.9rem;
             background: transparent;                /* Creates a transparent background so that the button matches the color of the box */
             cursor: pointer;                        /* It's a clickable element, so we change the cursor */
+            color: var(--stop-text)                 /* Forces text color to black; necessary to stop Safari overwriting and making it blue like a hyperlink */
         }
 
         .extra-routes /* Describes style of container shown when "Show other routes" button is clicked */
@@ -204,6 +205,8 @@ const modeStopLists = // Defines which stops belong to Fiona and which belong to
     alice: [3, 4, 5, 6, 7, 8, 9]
 };
 
+const expandedStops = new Set(); // This is to help us remember if hidden stops are expanded so it doesn't close on refresh.
+
 /* At the end of a URL, There is something called a "query string" which specifies certain parameters. We're using this to specify a Fiona/Alice "mode" so that we know
    which stops we ought to be displaying. URLSearchParams(window.location.search) checks the part of the URL after the "?"; the query string. It gets the value of mode,
    which will either be "fiona", "alice", or NULL/unspecified; if it returns false, we instead use "fiona" by default*/
@@ -300,7 +303,10 @@ async function fetchBusTimes()
             continue;
         
         const currStop = document.getElementById("stop" + stop.id); // We fetch using the stop IDs established earlier
-        const arrivals = currStop.querySelectorAll(".arrival-time"); // Grabs our two placeholder arrival times established earlier (currently displaying "Loading...")
+        const arrivals = currStop.querySelectorAll(":scope > .arrival-time"); // Grabs our two placeholder arrival times established earlier (currently displaying "Loading...")
+        /* Note: We specify ":scope >" so that we only get .arrival-time elements that are direct children of currStop; this discludes any .arrival-time elements which are
+           more deeply nested inside other containers, like the expanded extra routes. Failing to do this can result in fuckery when the drop down menu is open, where the 
+           extra times in that list are treated the same (in some ways) as the primary/shown arrival times, breaking things. */
 
         try
         {
@@ -422,6 +428,10 @@ async function fetchBusTimes()
                 const routeList = make("div", { class: "extra-routes", style: "display:none;" }); // Create our hidden routes list element
                 currStop.appendChild(routeList);
 
+                let expanded = expandedStops.has(stop.id);
+                routeList.style.display = expanded ? "block" : "none";
+                button.textContent = expanded ? `- Hide other routes` : `+ Show other routes (${hiddenEntries.length})`;
+
                 hiddenEntries.forEach(function(entry) 
                 {
                     const routeText = entry.routeID ? `Route ${entry.routeID}` : "Error: No route ID found";
@@ -431,16 +441,25 @@ async function fetchBusTimes()
                     routeList.appendChild(line);
                 });
 
-                let expanded = false;
                 button.addEventListener("click", function()
                 {
                     expanded = !expanded;
                     routeList.style.display = expanded ? "block" : "none";
                     button.textContent = expanded ? `- Hide other routes` : `+ Show other routes (${hiddenEntries.length})`;
+
+                    if (expanded)
+                        expandedStops.add(stop.id);
+                    else
+                        expandedStops.delete(stop.id);
                 });
             }
 
-
+            if(expandedStops.has(stop.id))
+            {
+                expanded = true;
+                routeList.style.display = "block";
+                button.textContent = `- Hide other routes`;
+            }
         }
         catch (e) // If fetching/parsing goes wrong, show error message
         {
