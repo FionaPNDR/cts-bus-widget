@@ -81,6 +81,13 @@
             margin: 6px 0px;            /* When two values are specified for margin, its vertical & horizontal. This provides a 6px top/bottom margin and zero left/right margin */
         }
 
+        .arrivals-container /* Style for arrival times container, since it makes arrival-time elements a non-child of <body> (meaning they don't inherit flex) */
+        {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
         .other-btn /* Style for "Show other routes" button */
         {
             display: inline-block;                  /* Creates a block element which is "inline", meaning we can embed an element with margins, padding etc. */
@@ -272,8 +279,9 @@ stops.forEach(function(stop)                            // Function which runs f
     h2.appendChild(a);                                  // Specifying a as the child of h2
     newStop.appendChild(h2);                            // Specifying h2 as the child of newStop
 
-    newStop.appendChild(make("p", { class: "arrival-time" }, "Loading..."));     // Simply creates paragraph <p> element which serves as a "Loading" placeholder for arrival times
-    newStop.appendChild(make("p", { class: "arrival-time" }, "Loading..."));
+    const arrivalsContainer = make("div", { class: "arrivals-container" });      // Creates container to hold uncapped number of arrival times (previously hard-coded to 2)
+    arrivalsContainer.textContent = "Loading...";
+    newStop.appendChild(arrivalsContainer);
 
     container.appendChild(newStop);                     // Specifying newStop as the child of container
 });
@@ -300,7 +308,8 @@ async function fetchBusTimes()
             continue;
         
         const currStop = document.getElementById("stop" + stop.id); // We fetch using the stop IDs established earlier
-        const arrivals = currStop.querySelectorAll(".arrival-time"); // Grabs our two placeholder arrival times established earlier (currently displaying "Loading...")
+        const arrivalsContainer = currStop.querySelector(".arrivals-container"); // Grabs our arrival times container w/ "Loading..." placeholder
+        arrivalsContainer.innerHTML = ""; // Clear previous arrivals
 
         try
         {
@@ -360,35 +369,20 @@ async function fetchBusTimes()
 
             // Next, let's actually display the arrival times that we're showing by default:
 
-            const times = shownEntries.slice(0,2);      // We can only show two arrival times; slice specifies beginning, end index as [0, 2) (index 2 isn't included)
+            const times = shownEntries;           
             
             if(times.length > 0)                        // If we have times to display:
             {
-                arrivals.forEach(function(element,i)
+                times.forEach(function(time)
                 {
-                    if(times[i])
-                    {
-                        element.textContent = `in ${times[i].mins} minutes`;
-                        element.className = "arrival-time " + getColor(times[i].mins, stop.thresholds[0], stop.thresholds[1]); // Sets class to stop."color", so that it gets the correct color
-                        element.style.display = "block";
-                    }
-                    else
-                        element.style.display = "none"; // Hide unused <p> elements (such as if there is only one time given)
+                    const entry = make("p", { class: "arrival-time " + getColor(time.mins, stop.thresholds[0], stop.thresholds[1])}, `in ${time.mins} minutes`);
+                    arrivalsContainer.appendChild(entry);
                 });
             }
             else // In the event that we have no times:
             {
-                arrivals.forEach(function(element, i) 
-                {
-                    if(i === 0)
-                    {
-                        element.textContent = "No arrivals in the next 60 min";
-                        element.className = "arrival-time";
-                        element.style.display = "block";
-                    }   
-                    else
-                        element.style.display = "none"; // Hide unused <p> elements (no need to display same message twice)
-                });
+                const entry = make("p", { class: "arrival-time" }, "No arrivals in the next 60 min");
+                arrivalsContainer.appendChild(entry);
             }
 
 
@@ -432,17 +426,8 @@ async function fetchBusTimes()
         catch (e) // If fetching/parsing goes wrong, show error message
         {
             console.error(e);
-            arrivals.forEach(function(element, i)
-            {
-                if(i === 0)
-                {
-                    element.textContent = "Error fetching times from CTS website";
-                    element.className = "arrival-time";
-                    element.style.display = "block";
-                }
-                else
-                    element.style.display = "none";
-            });
+            const entry = make("p", { class: "arrival-time" }, "Error fetching times from CTS website");
+            arrivalsContainer.appendChild(entry);
         }
     }
 }
