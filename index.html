@@ -371,7 +371,7 @@ async function fetchBusTimes()
                     {            
                         routeID: routeID,           // Previously obtained route ID
                         routeLabel: header,         // Full text within <h5>
-                        mins: parseInt(time[1], 10)   // Minutes until arrival (parsed in base 10). Number of minutes should be second element ("in" is first, "min" is third)
+                        mins: parseInt(time[1], 10) // Minutes until arrival (parsed in base 10). Number of minutes should be second element ("in" is first, "min" is third)
                     });
                 }
             }
@@ -460,7 +460,8 @@ async function fetchBusTimes()
                 {
                     const routeText = entry.routeID ? `Route ${entry.routeID}` : "Error: No route ID found";
 
-                    const line = make ("div", { class: "extra-routes-list arrival-time " + getColor(entry.mins, stop.thresholds[0], stop.thresholds[1]) }, `${routeText} - in ${entry.mins} minutes`);
+                    var formattedTime = convertTime(entry.mins, currentMode)
+                    const line = make ("div", { class: "extra-routes-list arrival-time " + getColor(entry.mins, stop.thresholds[0], stop.thresholds[1]) }, `${routeText} - in ${entry.mins} mins - ${formattedTime}`);
 
                     routeList.appendChild(line);
                 });
