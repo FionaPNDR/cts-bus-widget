@@ -292,29 +292,34 @@ function getColor(mins, rthresh, ythresh)
 }
 
 // We also need a function which takes the number of minutes remaining and turns it into an actual 12-hr format time
-function convertTime(mins)
+function convertTime(mins, mode)
 {
     const now = new Date();
-    var hour = now.getHours();
-    var minute = now.getMinutes();
-    minute += mins;
+    var hour = now.getHours();                      // Gets hours in 24-hr format; 0 - 23
+    var minute = now.getMinutes();                  // Gets minutes; 0 - 59
+    var format12 = mode === "alice" ? false : true  // Sets 12 or 24 display format
+    var ampm = "";                                  // Empty string by default in case of 24 hour time
+    minute += mins;                                 // Adds minutes until bus to current time
 
-    if(minute > 59)
+    if(minute > 59)                                 // If after adding we've surpassed the current hour
     {
-        minute = minute % 60;
-        hour = (hour + 1) % 24;
+        var hourDiff = Math.trunc(minute / 60)      // Find difference in hours (usually 1, handles edge case if more than one hour of difference)
+        hour = (hour + hourDiff) % 24;              // Add difference and convert back to 24-hr format (e.g. 24 would become 0) 
+        minute = minute % 60;                       // Convert back to 0 - 59 minute format (e.g. 85 would become 25)
     }
     
-    var ampm = (hour >= 12) ? "am" : "pm";
-    hour = hour % 12;
-    hour = (hour == 0) ? 12 : hour;
+    if(format12)
+    {
+        ampm = (hour >= 12) ? "pm" : "am";          // Determine if we're in am or pm time
+        hour = hour % 12;                           // For 12-hr format, sets 13 - 23 to 1 - 11
+        hour = (hour == 0) ? 12 : hour;             // We should display hour 0 as 12
+    }
 
-    var minStr = `${minute}`;
-    if(minStr < 10)
+    var minStr = `${minute}`;                       // Use the minute number by default
+    if(minStr < 10)                                 // If single digit, we need a 0 to avoid things like 8:5 (should be 8:05)
         minStr = `0${minute}`;
 
-    var strTime = `${hour}:${minStr} ${ampm}`;
-    //const strTime = 'testing';
+    var strTime = `${hour}:${minStr} ${ampm}`;      // Display hour:minute and then ampm; in 24 hour time, ampm should still be empty
     return strTime;
 }
 
@@ -409,7 +414,7 @@ async function fetchBusTimes()
                 {
                     if(times[i])
                     {
-                        var formattedTime = convertTime(times[i].mins)
+                        var formattedTime = convertTime(times[i].mins, currentMode)
                         element.textContent = `in ${times[i].mins} mins - ${formattedTime}`;
                         element.className = "arrival-time " + getColor(times[i].mins, stop.thresholds[0], stop.thresholds[1]); // Sets class to stop."color", so that it gets the correct color
                         element.style.display = "block";
