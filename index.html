@@ -291,6 +291,33 @@ function getColor(mins, rthresh, ythresh)
         return "distant";
 }
 
+// We also need a function which takes the number of minutes remaining and turns it into an actual 12-hr format time
+function convertTime(mins)
+{
+    const now = new Date();
+    var hour = now.getHours();
+    var minute = now.getMinutes();
+    minute += mins;
+
+    if(minute > 59)
+    {
+        minute = minute % 60;
+        hour = (hour + 1) % 24;
+    }
+    
+    var ampm = (hour >= 12) ? "am" : "pm";
+    hour = hour % 12;
+    hour = (hour == 0) ? 12 : hour;
+
+    var minStr = `${minute}`;
+    if(minStr < 10)
+        minStr = `0${minute}`;
+
+    var strTime = `${hour}:${minStr} ${ampm}`;
+    //const strTime = 'testing';
+    return strTime;
+}
+
 // Now we can finally parse the CTS website for bus arrival times:
 
 async function fetchBusTimes()
@@ -382,7 +409,8 @@ async function fetchBusTimes()
                 {
                     if(times[i])
                     {
-                        element.textContent = `in ${times[i].mins} minutes`;
+                        var formattedTime = convertTime(times[i].mins)
+                        element.textContent = `in ${times[i].mins} mins - ${formattedTime}`;
                         element.className = "arrival-time " + getColor(times[i].mins, stop.thresholds[0], stop.thresholds[1]); // Sets class to stop."color", so that it gets the correct color
                         element.style.display = "block";
                     }
