@@ -29,6 +29,7 @@
             --arrival-urgent: #ff0000;
             --arrival-soon: #ff9900;
             --arrival-distant: #008000;
+            --sync: #ffea9d;
         }
 
         body /* Defines the style of the body; that is, the entirety of displayed elements */
@@ -67,11 +68,13 @@
             margin: 0px 0px 10px 0px;   /* When four values are specified for margin, it's TOP/RIGHT/BOTTOM/LEFT; this is therefore setting the bottom margin to 10px and the rest to 0px */
         }
 
-        .stop h2 a /* The "a" tag describes anchors/links, and so this is describing the style of anchors/lengths within the stop header */
+        .stop a /* The "a" tag describes anchors/links, and so this is describing the style of anchors/lengths within the stop header */
         {
             color: inherit;             /* Rather than a blue link, we inherit the color of the title, allowing for an "invisible link" feel */
             text-decoration: none;      /* Removes underline from link */
             cursor: pointer;            /* Again, changes cursor when hovering to indicate that it is a link */
+            font-size: 1.2rem;
+            margin: 0px 0px 10px 0px;   /* When four values are specified for margin, it's TOP/RIGHT/BOTTOM/LEFT; this is therefore setting the bottom margin to 10px and the rest to 0px */
         }
 
         .arrival-time /* Style for the display of arrival times */
@@ -104,6 +107,43 @@
         {
             font-size: 1.0rem;
             margin: 5px 0px;        /* Describes line spacing; top/bottom is 5px, no need for horizontal margin */
+        }
+
+        .sync 
+        {
+            width: 90%;                     
+            margin: 12px 0px;                      
+            border-radius: 12px;                   
+            text-align: center;
+            position: relative;                     
+            display: block; 
+            background:#f0f000;
+            background-color: var(--sync);
+            font-size: 1.2rem;
+            margin: 12px 0px;                     
+            padding: 15px;
+            border-radius: 12px;                  
+        }
+
+        .sync h2 
+        {
+            font-size: 1.4rem;
+            margin: 0px 0px 10px 0px;  
+        }
+
+        .sync h2 a
+        {
+            color: inherit;             
+            text-decoration: none;    
+            cursor: pointer;       
+            font-size: 1.2rem;
+            margin: 6px 0px 10px 0px;  
+        }
+
+        .sync h3
+        {
+            font-size: 1.2rem;
+            color: var(--stop-text) 
         }
 
         .stop.route1    { background-color: var(--route1); }
@@ -248,9 +288,43 @@ function make(tag, attributes = {}, text = '')      // Make a new HTML element o
     return element;
 }
 
+
+
 // Now, we can generate each stop.
 
 const container = document.getElementById("stopsContainer"); // Stores previously defined stopContainer (<div>)
+
+function syncDisplay()
+{
+    const newSync = make("div", { class: "sync", id: `sync0`, style: "display: none;"});
+    const h2 = make("h2", {}, "Upcoming Sync!");
+    const a = make("a", { href: `https://www.corvallistransit.com/rtt/public/?page=text&pln=14704`, target: "_blank", style: `display:block; margin-bottom:10px;`}, `Witham Hill & Woodland (1 → 9th & Circle)`);
+    const a2 = make("a", { href: `https://www.corvallistransit.com/rtt/public/?page=text&pln=10723`, target: "_blank", style: `display:block; margin-bottom:10px;`}, `9th & Madison (2 → Home Depot)`);
+    const h3 = make("h3", { style: `display:block; margin-bottom: 10px`, id: `eta` }, `Estimated Time of Arrival at Home Depot: HH:MM`);
+    
+    h2.appendChild(a);
+    h2.appendChild(make("p", { class: "arrival-time" }, "Loading..."))
+    h2.appendChild(a2);
+    h2.appendChild(make("p", { class: "arrival-time" }, "Loading..."))
+    h2.appendChild(h3);
+    newSync.appendChild(h2);
+    container.appendChild(newSync);
+}
+
+function findSync(timesA, timesB, buffer)
+{
+    for(let i of timesA)
+    {
+        for(let j of timesB)
+        {
+            if((j - i) >= buffer)
+                return {route1: i, route2: j}
+        }
+    }
+    return null;
+}
+
+syncDisplay();
 
 stops.forEach(function(stop)                            // Function which runs for each element in the "stop" data structure. Easier to understand if referencing hardcoded html version
 {
@@ -261,8 +335,8 @@ stops.forEach(function(stop)                            // Function which runs f
        stop + stop.id makes it easy for us to refer to the stop later by creating "stop1", "stop2", etc. */
     
     const newStop = make("div", { class: "stop " + stop.color, id: "stop" + stop.id});
+    const h2 = make("h2");
 
-    const h2 = make("h2");                              // We make sub-heading "h2" for the stop's title
 
     /* Again 'a' describes a link or anchor, so this is where we create a link to the stop's page which also displays the title of the stop. We take advantage of the fact that all of the 
        CTS stop links are identical but for the 5-digit stop ID at the end in order to just append this ID onto the link here. target: "_blank" is just an HTML attribute that tells the
@@ -271,10 +345,10 @@ stops.forEach(function(stop)                            // Function which runs f
     const a = make("a", { href: `https://www.corvallistransit.com/rtt/public/?page=text&pln=${stop.pin}`, target: "_blank"}, `${stop.name}`); 
 
     h2.appendChild(a);                                  // Specifying a as the child of h2
-    newStop.appendChild(h2);                            // Specifying h2 as the child of newStop
+    newStop.appendChild(h2);
 
     newStop.appendChild(make("p", { class: "arrival-time" }, "Loading..."));     // Simply creates paragraph <p> element which serves as a "Loading" placeholder for arrival times
-    newStop.appendChild(make("p", { class: "arrival-time" }, "Loading..."));
+    newStop.appendChild(make("p", { class: "arrival-time" }, ""));
 
     container.appendChild(newStop);                     // Specifying newStop as the child of container
 });
@@ -327,13 +401,16 @@ function convertTime(mins, mode)
 
 async function fetchBusTimes()
 {
+    const allShownEntries = [];
+
     for(let stop of stops) // for every element "stop" of the data structure "stops"
     {
         if(!modeStopLists[currentMode].includes(stop.id))   // Skip this stop if its ID isn't in this mode's stop list
             continue;
         
         const currStop = document.getElementById("stop" + stop.id); // We fetch using the stop IDs established earlier
-        const arrivals = currStop.querySelectorAll(".arrival-time"); // Grabs our two placeholder arrival times established earlier (currently displaying "Loading...")
+        const arrivals = Array.from(currStop.querySelectorAll(".arrival-time")); // Grabs our two placeholder arrival times established earlier (currently displaying "Loading...")
+        console.log("currStop:", currStop, "arrivals:", arrivals);
 
         try
         {
@@ -370,8 +447,8 @@ async function fetchBusTimes()
                     entries.push(                   // Places elements at end of array
                     {            
                         routeID: routeID,           // Previously obtained route ID
-                        routeLabel: header,         // Full text within <h5>
-                        mins: parseInt(time[1], 10) // Minutes until arrival (parsed in base 10). Number of minutes should be second element ("in" is first, "min" is third)
+                        mins: parseInt(time[1], 10),// Minutes until arrival (parsed in base 10). Number of minutes should be second element ("in" is first, "min" is third)
+                        pin: stop.pin
                     });
                 }
             }
@@ -385,7 +462,10 @@ async function fetchBusTimes()
             entries.forEach(function(entry)                                         // For every entry we've found on the page
             {
                 if(entry.routeID && shown.includes(entry.routeID))                  // If the ID matches that of one of our non-hidden routes, we can add it to shownEntries[]
+                {    
                     shownEntries.push(entry);
+                    allShownEntries.push(entry);
+                }
                 else    
                     hiddenEntries.push(entry);
             });
@@ -395,7 +475,6 @@ async function fetchBusTimes()
 
             const times = shownEntries;
 
-            let arrivals = currStop.querySelectorAll(".arrival-time"); // Create static copy of NodeList before we mutate to avoid lag/runaway
 
             if(arrivals.length < times.length)
             {
@@ -493,6 +572,50 @@ async function fetchBusTimes()
             });
         }
     }
+    const syncBlock = document.getElementById("sync0");
+    const syncArrivals = Array.from(syncBlock.querySelectorAll(".arrival-time"));
+
+    var arrivalMins = 0;
+
+    if(syncArrivals.length >=  2 && currentMode === "alice") // Sync block not yet initialized
+    {
+        const route1Entries = allShownEntries.filter(element => (element.routeID === "1" || element.routeID === "PK1") && element.pin === "14704");
+        const route2Entries = allShownEntries.filter(element => element.routeID === "2" && element.pin === "10723");
+
+        times1 = route1Entries.map(element => element.mins);
+        times2 = route2Entries.map(element => element.mins);
+
+        console.log(stop.pin, allShownEntries.map(e => ({routeID:e.routeID, pin:e.pin, mins:e.mins})));
+        console.log(route1Entries.map(element => element.mins), route2Entries.map(element => element.mins));
+
+        const sync = findSync(times1, times2, 13);
+
+        if(sync)
+        {
+            syncBlock.style.display = "block";
+
+            syncArrivals[0].textContent = `in ${sync.route1} mins - ${convertTime(sync.route1, currentMode)}`;
+            syncArrivals[0].className = "arrival-time " + getColor(sync.route1, 10, 20);
+            syncArrivals[0].style.display = "block";
+
+            syncArrivals[1].textContent = `in ${sync.route2} mins - ${convertTime(sync.route2, currentMode)}`;
+            syncArrivals[1].className = "arrival-time " + getColor(sync.route2, 5, 10);
+            syncArrivals[1].style.display = "block";
+
+            arrivalMins = sync.route2 + 22;
+        }
+        else
+            syncBlock.style.display = "none";
+    }
+
+    const ETABlock = document.getElementById("eta");
+    const etaText = Array.from(syncBlock.querySelectorAll("h3"));
+
+    const eta = arrivalMins ? convertTime(arrivalMins, currentMode) : `???`;
+
+    etaText[0].textContent = `ETA at Home Depot: ${eta}`;
+    etaText[0].className = "h3";
+    etaText[0].style.display = "block";
 }
 
 updateTitle(currentMode);
