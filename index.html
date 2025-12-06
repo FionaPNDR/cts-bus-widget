@@ -399,8 +399,17 @@ function convertTime(mins, mode)
 
 // Now we can finally parse the CTS website for bus arrival times:
 
+let fetchInProgress = false;
+
 async function fetchBusTimes()
 {
+    if (fetchInProgress)
+    {
+        console.log("fetchBusTimes(): Fetch in progress, skipping fetch.");
+        return;
+    }
+    fetchInProgress = true;
+
     const allShownEntries = [];
 
     for(let stop of stops) // for every element "stop" of the data structure "stops"
@@ -415,7 +424,8 @@ async function fetchBusTimes()
         try
         {
             // Fetch the stop's page from CTS's website using a proxy
-            const response = await fetch(`https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=${stop.pin}`); // Fetch the site data, specify link with 5-digit id
+            const url = `https://corsproxy.io/?https://www.corvallistransit.com/rtt/public/?page=text&pln=${stop.pin}&cb=${Date.now()}`;
+            const response = await fetch(url); // Fetch the site data, specify link with 5-digit id
             const html = await response.text(); // Get the raw HTML as a string
 
             // Now we can parse the HTML for our times and routes. Our arrival headers, which include the routes, are stored in h5. Our times are stored in list items <li> within an unordered list <ul>.
@@ -570,6 +580,10 @@ async function fetchBusTimes()
                 else
                     element.style.display = "none";
             });
+        }
+        finally 
+        {
+            fetchInProgress = false;
         }
     }
     const syncBlock = document.getElementById("sync0");
