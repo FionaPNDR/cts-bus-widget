@@ -236,12 +236,26 @@ const stops = // Specifies data about each stop
         routes: ["2"],
         color: "route2",
         thresholds: [15, 25],
-        pin: "11004" }
+        pin: "11004" },
+    {
+        id: 10,
+        name: "Monroe & Kings (1 → Witham Hill)",
+        routes: ["2"],
+        color: "route1",
+        thresholds: [15, 25],
+        pin: "12449" },
+    { 
+        id: 11,
+        name: "Witham Hill & Woodland (1 → OSU)",
+        routes: ["1", "PK1"],
+        color: "route1",
+        thresholds: [10, 20],
+        pin: "14704" }
 ];
 
 const modeStopLists = // Defines which stops belong to Fiona and which belong to Alice
 {
-    fiona: [1, 2],
+    fiona: [1, 2, 10, 11],
     alice: [3, 4, 5, 6, 7, 8, 9]
 };
 
@@ -602,7 +616,8 @@ async function fetchBusTimes()
         console.log(stop.pin, allShownEntries.map(e => ({routeID:e.routeID, pin:e.pin, mins:e.mins})));
         console.log(route1Entries.map(element => element.mins), route2Entries.map(element => element.mins));
 
-        const sync = findSync(times1, times2, 13);
+        //const sync = findSync(times1, times2, 13); // uncomment to enable sync
+        const sync = false;
 
         if(sync)
         {
