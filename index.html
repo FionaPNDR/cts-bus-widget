@@ -616,8 +616,8 @@ async function fetchBusTimes()
         console.log(stop.pin, allShownEntries.map(e => ({routeID:e.routeID, pin:e.pin, mins:e.mins})));
         console.log(route1Entries.map(element => element.mins), route2Entries.map(element => element.mins));
 
-        //const sync = findSync(times1, times2, 13); // uncomment to enable sync
-        const sync = false;
+        const sync = findSync(times1, times2, 13);  // uncomment to enable sync
+        //const sync = false;                       // uncomment to disable sync
 
         if(sync)
         {
