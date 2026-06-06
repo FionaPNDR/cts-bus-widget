@@ -465,7 +465,7 @@ async function fetchBusTimes()
                 const routeMatch = header.match(/(\d+)\.\s*(.+)/);             // Gets route string
                 const routeID = routeMatch ? routeMatch[1].toUpperCase() : null;    // The number should be the second element in routeMatch's list of findings (bc of space)
                 console.log("header: " + header);
-                console.log("routeMatch: " + routeMatch[0]);
+                console.log("routeMatch: " + routeMatch[0]); 
                 console.log("routeID: " + routeID);
 
                 const timeMatches = [...match[2].matchAll(/<li>\s*(\d+)\s+minutes\s*<\/li>/gi)]; // Parses <li> within <ul> all for "in x min" strings and stores in indicies [0, 1, 2]
